@@ -742,7 +742,7 @@ G.moves=[
 const QZ={sec:'mixed',mode:'inf',cur:null,done:false,streak:0,run:null,adv:0,timer:0,focus:null,
   stats:LS.get('vgcQuiz2',{}),missed:LS.get('vgcMissed',[]),daily:LS.get('vgcDaily',{last:'',streak:0,best:0,scores:{}}),hist:LS.get('vgcHist',{}),view:'menu'};
 const qkey=q=>q.type==='custom'?q.key:q.prompt+'|'+(q.type==='num'?q.answer:(q.opts.find(o=>o.ok)||{}).html);
-const saveQ=()=>{LS.set('vgcHist',QZ.hist);LS.set('vgcQuiz2',QZ.stats);LS.set('vgcMissed',QZ.missed.slice(-40))};
+const saveQ=()=>{LS.set('vgcHist',QZ.hist);LS.set('vgcQuiz2',QZ.stats);LS.set('vgcMissed',QZ.missed.slice(-300))};
 function secStat(sec){return QZ.stats[sec]||(QZ.stats[sec]={ok:0,n:0,best:0})}
 function weightedSec(){
   const keys=Object.keys(G);const w=keys.map(k=>{const s=QZ.stats[k];const acc=s&&s.n>=5?s.ok/s.n:.6;return .5+(1-acc)*2.5});
@@ -866,16 +866,17 @@ function qStats(){
   const best=(QZ.stats[QZ.sec==='mixed'?'_all':QZ.sec]||{}).best||0;
   $('#qOk').textContent=ok;$('#qN').textContent=n;$('#qAcc').textContent=n?Math.round(ok/n*100)+'%':'–';$('#qS').textContent=QZ.streak;$('#qB').textContent=best;
 }
-function pickMissed(){
-  const r=QZ.run;if(!QZ.missed.length||Math.random()>.35)return null;
-  const c=QZ.missed.filter(x=>!r.seen.has(qkey(x)));if(!c.length)return null;
-  const q0=rnd(c);r.seen.add(qkey(q0));const q=hyd(q0);if(!q)return null;q.retry=1;return q;
+function freshQ(){
+  // random question not asked yet in this run; mistakes are never re-injected here (they go to Review mistakes)
+  const r=QZ.run;let q=null;
+  for(let t=0;t<40;t++){const c=makeQ();if(!c)continue;q=c;const k=qkey(c);if(!r.seen.has(k)){r.seen.add(k);return c}}
+  return q;
 }
 function newQ(){
   clearTimeout(QZ.adv);const r=QZ.run;
   if(r.queue?r.qi>=r.queue.length:r.n>=r.total){renderResult();return}
   QZ.done=false;
-  let q=r.queue?r.queue[r.qi]:(pickMissed()||makeQ());
+  let q=r.queue?r.queue[r.qi]:freshQ();
   if(!q){renderResult();return}
   q.order=q.keepOrder&&q.opts?q.opts.map((_,i)=>i):null;
   QZ.cur=q;drawQ();
@@ -923,10 +924,6 @@ function finishQ(ok,msg){
     if(!QZ.missed.some(x=>qkey(x)===k)){
       if(q.type==='custom'){if(q.rb)QZ.missed.push({type:'custom',rb:q.rb,key:q.key,sec:q.sec,prompt:q.prompt})}
       else{const c=JSON.parse(JSON.stringify(q));c.order=null;c.retry=0;c.rt=0;QZ.missed.push(c)}
-    }
-    if(SPECM.includes(QZ.mode)&&(q.rtn||0)<2){
-      const rq=q.type==='custom'?hyd(q):JSON.parse(JSON.stringify(q));
-      if(rq){rq.rt=1;rq.rtn=(q.rtn||0)+1;rq.order=null;const at=Math.min(r.qi+5+Math.floor(Math.random()*6),r.queue.length);r.queue.splice(at,0,rq)}
     }
   }
   saveQ();qStats();
