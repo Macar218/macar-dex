@@ -1113,9 +1113,10 @@ function t30Panel(f,on){
   const sp=C?C.s.map(([n,v,pc])=>`<div class="t30sp"><b>${bi('n',n)}</b><span>${spStr(v)}</span><i>${Math.round(pc)}%</i></div>`).join(''):'';
   const pt=S?S.t.slice(0,6).map(([k,v])=>{const q=BYK[k];return q?`<button class="t30tm" data-open="${k}"><img src="${q.img}" alt=""><span>${esc(q.n)}</span><b>${Math.round(v)}%</b></button>`:''}).join(''):'';
   let spe='';
-  if(C&&C.s[0]){const s=C.s[0],v=stat50(f,5,s[1][5],natMult(s[0]));spe=`<div class="speedstrip"><div><small>Usual spread</small><b>${v}</b></div><div><small>+ Scarf</small><b>${Math.floor(v*1.5)}</b></div><div><small>+ Tailwind</small><b>${v*2}</b></div></div>`}
+  if(C&&C.s[0]){const s=C.s[0],v=stat50(f,5,s[1][5],natMult(s[0]));spe=`<div class="speedstrip"><div><small>Most common spread</small><b>${v}</b></div><div><small>+ Scarf</small><b>${Math.floor(v*1.5)}</b></div><div><small>+ Tailwind</small><b>${v*2}</b></div></div>`}
   const blk=(t,h)=>h?`<h4>${t}</h4>${h}`:'';
-  return `<div class="t30p${on?'':' hide'}" data-pf="${f.k}">${head}${blk('Ability',ab)}${blk('Item',it)}${blk('Nature and spread',sp)}${blk('Moves',mv?`<div class="t30cs">${mv}</div>`:'')}${blk('Usual teammates',pt?`<div class="t30tms">${pt}</div>`:'')}${blk('Speed with the usual spread',spe)}</div>`;
+  const spPc=C&&C.s[0]?Math.round(C.s[0][2]):0;
+  return `<div class="t30p${on?'':' hide'}" data-pf="${f.k}">${head}${blk('Ability',ab)}${blk('Item',it)}${blk('Nature and spread · most common',sp)}${blk('Moves',mv?`<div class="t30cs">${mv}</div>`:'')}${blk('Usual teammates',pt?`<div class="t30tms">${pt}</div>`:'')}${blk(`Speed with the most common spread (${spPc}%)`,spe)}</div>`;
 }
 function t30Card(x,i,mx){
   const b=x.p,fs=t30Forms(b);if(!fs.length)return '';
@@ -1172,14 +1173,14 @@ function top30Qs(){
      return{sec:'moves',prompt:`Which of these moves does <b>${esc(f.n)}</b> run in most of its sets?`,ik:f.k,opts:[opt(bi('m',c),1),...bad.map(x=>opt(bi('m',x),0))],compact:1,explain:`${esc(f.n)}: ${s.m.slice(0,6).map(([n,v])=>esc(n)+' '+Math.round(v)+'%').join(' · ')}.`}},
    it:f=>{const c=(C[f.k]||{}).i;if(!c||!c.length||f.m)return null;const own=c.map(x=>x[0]);const bad=pickN(allIt,3,x=>!own.includes(x));if(bad.length<3)return null;
      return{sec:'items',prompt:`Which item does <b>${esc(f.n)}</b> hold most often?`,ik:f.k,opts:[opt(bi('i',c[0][0]),1),...bad.map(x=>opt(bi('i',x),0))],compact:1,explain:`${esc(f.n)}: ${c.map(([n,v])=>esc(n)+' '+Math.round(v)+'%').join(' · ')}.`}},
-   spr:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length)return null;const c=s[0];const bad=pickN(allSpr,3,x=>sprKey(x)!==sprKey(c));if(bad.length<3)return null;
+   spr:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length||s[0][2]<15)return null;const c=s[0];const bad=pickN(allSpr,3,x=>sprKey(x)!==sprKey(c));if(bad.length<3)return null;
      return{sec:'natures',prompt:`What is the most common spread of <b>${esc(f.n)}</b>?`,ik:f.k,opts:[opt(sprHtml(c),1),...bad.map(x=>opt(sprHtml(x),0))],explain:`${esc(f.n)}: ${esc(c[0])} ${spStr(c[1])} (${Math.round(c[2])}%).`}},
    par:f=>{const t=(S[f.k]||{}).t;if(!t||t.length<4)return null;const own=new Set([bkOf(f.k),...t.map(x=>bkOf(x[0]))]);
      const good=t.slice(0,4).filter(x=>BYK[x[0]]);if(!good.length)return null;const c=BYK[rnd(good)[0]];
      const bad=pickN(tops,3,b=>!own.has(b.k));if(bad.length<3)return null;
      return{sec:'pokemon',prompt:`Which Pokémon is a usual teammate of <b>${esc(f.n)}</b>?`,ik:f.k,opts:[monOpt(c,1),...bad.map(b=>monOpt(b,0))],explain:`${esc(f.n)}: ${t.slice(0,6).map(([k,v])=>esc((BYK[k]||{n:k}).n)+' '+Math.round(v)+'%').join(' · ')}.`}},
-   spe:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length)return null;const c=s[0],v=stat50(f,5,c[1][5],natMult(c[0]));
-     return{type:'num',sec:'speed',prompt:`Speed of <b>${esc(f.n)}</b> with its usual spread (${esc(c[0])} · ${spStr(c[1])})?`,ik:f.k,answer:v,hint:'Level 50. ⌊(base + 20 + SP) × nature⌋. Type the number.',explain:`Base ${f.s} → ${v}.`}}
+   spe:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length||s[0][2]<15)return speedNumQ(f,'sp_s32p');const c=s[0],v=stat50(f,5,c[1][5],natMult(c[0]));
+     return{type:'num',sec:'speed',prompt:`Speed of <b>${esc(f.n)}</b> with its most common spread (${esc(c[0])} · ${spStr(c[1])})?`,ik:f.k,answer:v,hint:'Level 50. ⌊(base + 20 + SP) × nature⌋. Type the number.',explain:`Base ${f.s} → ${v}.`}}
   };
   const out=[],seen=new Set();
   tops.forEach(b=>{let n=0;for(const t of shuffle(Object.keys(gens))){if(n>=2)break;const f=pickForm(b);if(!f)break;const q=gens[t](f);if(q&&!seen.has(qkey(q))){seen.add(qkey(q));out.push(q);n++}}});
