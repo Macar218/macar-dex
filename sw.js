@@ -13,7 +13,9 @@ self.addEventListener('fetch',e=>{
   const req=e.request;if(req.method!=='GET')return;
   const url=new URL(req.url);
   if(url.origin!==location.origin){ // fonts etc.: cache-first
-    e.respondWith(caches.match(req).then(r=>r||fetch(req).then(res=>{const cp=res.clone();caches.open(C).then(c=>c.put(req,cp));return res}).catch(()=>r)));return;
+    // Only store usable responses (ok, or opaque no-cors images); offline + not cached = normal network error.
+    e.respondWith(caches.match(req).then(r=>r||fetch(req).then(res=>{if(res&&(res.ok||res.type==='opaque')){const cp=res.clone();caches.open(C).then(c=>c.put(req,cp))}return res}).catch(()=>Response.error())));return;
   }
-  e.respondWith(fromNet(req).catch(()=>caches.match(req,{ignoreSearch:true}).then(r=>r||caches.match('index.html'))));
+  // Fall back to index.html only when opening the page, never for scripts, data or images.
+  e.respondWith(fromNet(req).catch(()=>caches.match(req,{ignoreSearch:true}).then(r=>r||(req.mode==='navigate'?caches.match('index.html'):Response.error()))));
 });
