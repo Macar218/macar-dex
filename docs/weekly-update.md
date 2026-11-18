@@ -2,12 +2,12 @@
 
 Copia en el repositorio del documento `claude/vgc-actualizacion-uso-procedimiento.md` del proyecto de Claude "MACAR DEX" (18 nov 2026). Si se cambia uno, cambiar el otro.
 
-Se ejecuta todos los lunes (tarea programada a las 8:47, Europe/Madrid, para terminar antes de las 9:00). Versión 3.5: 18 nov 2026.
+Se ejecuta todos los lunes (tarea programada `macar-dex-weekly-update` de Claude Code, hacia las 8:47–9:00, Europe/Madrid, con la app de Claude abierta). Versión 3.6: 18 nov 2026.
 
 ## Objetivo
-Refrescar `meta.js`, `sets.js` y la parte de sets de `items.js` en los dos sitios donde vive la app:
-1. El artefacto "Macar Dex" (slug `6fb9c22c-53aa-4189-b00c-cf726cc514ff`). Se republica en patch (base_version de get_artifact). Para editar un archivo, primero `list_files` y leerlo del artefacto.
-2. El repositorio de GitHub `Macar218/macar-dex` (rama `main`), que sirve la app instalable en https://macar218.github.io/macar-dex/ (GitHub Pages). Las apps instaladas (iPhone, ordenador) cogen los archivos nuevos la próxima vez que se abren con conexión.
+Refrescar `meta.js`, `sets.js` y la parte de sets de `items.js` en el repositorio de GitHub `Macar218/macar-dex` (rama `main`), que sirve la app instalable en https://macar218.github.io/macar-dex/ (GitHub Pages). Las apps instaladas (iPhone, ordenador) cogen los archivos nuevos la próxima vez que se abren con conexión.
+
+Desde el 18 nov 2026 ya no se actualiza el antiguo artefacto "Macar Dex" (slug `6fb9c22c-53aa-4189-b00c-cf726cc514ff`).
 
 Hasta el 18 nov 2026 el artefacto era la fuente de verdad. Desde que Arturo edita en Claude Code, la fuente de verdad pasa a ser este repositorio.
 
@@ -52,7 +52,7 @@ Actualizar CURREG, conservar eventos de la regulación actual y los de la anteri
 3. Mapear a claves; anotar descartes.
 4. Regenerar `meta.js` conservando KEYS y EVENTS previos.
 5. Validar que cada archivo parsea como JavaScript y que el top 5 de cada fuente es coherente.
-6. (Mientras exista el artefacto) publicar en el artefacto los archivos que cambiaron.
+6. (Eliminado: ya no se publica en el artefacto.)
 7. Commit en `main` de este repositorio con mensaje `Weekly data update AAAA-MM-DD` y push. Si no hubo cambios, no hacer commit. No tocar `index.html`, `app.js`, `calcui.js`, `smogcalc.js`, `sw.js`, `manifest.webmanifest` ni los iconos.
 8. Resumir a Arturo en español.
 
@@ -70,3 +70,4 @@ Actualizar CURREG, conservar eventos de la regulación actual y los de la anteri
 - 2026-11-17 (manual): añadidos items.js, calculadora de daño y pestaña Items.
 - 2026-11-18 (manual): app instalable publicada en GitHub (Pages). La tarea semanal sube también los datos al repositorio.
 - 2026-11-18 (manual): Top 30 (Regionals) añadido. Arturo pasa a editar en Claude Code; este repositorio es la fuente de verdad.
+- 2026-11-18 (manual): la tarea semanal pasa a Claude Code y deja de actualizar el artefacto.

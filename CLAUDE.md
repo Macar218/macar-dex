@@ -33,9 +33,9 @@ Keys everywhere: lowercase name without symbols (`Charizard-Mega-Y` → `chariza
 - Mobile first (iPhone, installed from Safari). Check 390 px wide and desktop. Bottom bar uses safe-area insets and a visualViewport fix in `app.js`.
 
 ## Weekly data update
-A scheduled task runs every Monday 08:47 Europe/Madrid (`Macar Dex: actualizar uso (cada lunes)`). It updates `meta.js`, and on a new Smogon month `sets.js` and `CSETS`/`u` in `items.js`, then commits `Weekly data update YYYY-MM-DD` to `main`. It never touches code files. Full procedure: `docs/weekly-update.md`.
+A Claude Code desktop scheduled task (`macar-dex-weekly-update`, title `Macar Dex: actualizar uso (cada lunes)`) runs every Monday ~08:47–09:00 Europe/Madrid from `C:\Users\Usuario\Git\macar-dex`, only while the Claude app is open. It updates `meta.js`, and on a new Smogon month `sets.js` and `CSETS`/`u` in `items.js`, then commits `Weekly data update YYYY-MM-DD` to `main`. It never touches code files. Full procedure: `docs/weekly-update.md`.
 
-Until now the app was also published as a Claude artifact (slug `6fb9c22c-53aa-4189-b00c-cf726cc514ff`) and the task kept both in sync. Arturo now edits in Claude Code, so this repository should be treated as the source of truth; if the artifact is dropped, update the task so it only writes to this repository.
+This repository is the only source of truth. The old Claude artifact copy (slug `6fb9c22c-53aa-4189-b00c-cf726cc514ff`) is no longer updated, and the old Cowork task should be disabled so two runs do not collide.
 
 ## Testing before pushing
 No test suite in the repo. Serve locally (`python3 -m http.server`) and check in a browser at 390 px and desktop: no console errors, every tab opens, a calc result shows, a quiz runs to the end, Teams import/build works, and the app still loads offline after one online visit.
