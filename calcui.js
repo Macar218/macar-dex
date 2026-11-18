@@ -457,7 +457,7 @@ function renderTeams(){
        <div class="tmv">${(o.mv||[]).map(m=>{const d=MV.find(x=>x.n===m);return `<span style="--c:${d?TCOL[d.t]:'var(--line)'}">${esc(m)}</span>`}).join('')}</div></div>`}).join('');
     return `<div class="card tcard${tm.id===aid?' act':''}" data-tid="${tm.id}">
       <div class="thead">${TREN===tm.id?`<input type="text" class="tname" value="${esc(tm.name)}" data-tren="${tm.id}" maxlength="40">`:`<h3>${esc(tm.name)}</h3>`}${tm.id===aid?'<span class="cp" style="--c:var(--accent)">In calc</span>':''}
-       <div class="tsp">${tm.sets.map(o=>BYK[o.k]?`<img src="${BYK[o.k].img}" alt="" title="${esc(BYK[o.k].n)}">`:'').join('')}</div></div>
+       <div class="tsp">${tm.sets.map(o=>BYK[o.k]?`<img src="${BYK[o.k].img}" alt="${esc(BYK[o.k].n)}" title="${esc(BYK[o.k].n)}">`:'').join('')}</div></div>
       <div class="tslots">${slots||'<p class="note">Empty team.</p>'}</div>
       <div class="cbtns"><button class="btn primary" data-tedit="${tm.id}">Edit</button><button class="btn" data-tuse="${tm.id}">Use in calc</button><button class="btn" data-texp="${tm.id}">Export</button>${TREN===tm.id?`<button class="btn" data-tok="${tm.id}">Save name</button>`:`<button class="btn" data-tren2="${tm.id}">Rename</button>`}<button class="btn" data-tdup="${tm.id}">Duplicate</button><button class="btn${TDEL===tm.id?' danger':''}" data-tdel="${tm.id}">${TDEL===tm.id?'Tap again to delete':'Delete'}</button></div>
     </div>`}).join(''):'<div class="card note" style="padding:16px">No teams yet. Tap <b>Import team(s)</b> and paste a team from the Showdown teambuilder (Import/Export). A full Showdown backup imports every team with its name.</div>';
@@ -551,7 +551,7 @@ function renderBuilder(){
   if(TOPEN>=tm.sets.length)TOPEN=tm.sets.length-1;
   $('#tList').innerHTML=`<div class="card tbuild">
     <div class="tbtop"><button type="button" class="btn" data-tdone="1">← Done</button><input type="text" class="tname" data-tbname value="${esc(tm.name)}" maxlength="40" aria-label="Team name"><span class="note">${tm.sets.length}/6 · saved automatically</span></div>
-    <div class="tbsp">${tm.sets.map((o,j)=>BYK[o.k]?`<button type="button" class="cpk${j===TOPEN?' on':''}" data-topen="${j}" title="${esc(BYK[o.k].n)}"><img src="${BYK[o.k].img}" alt=""></button>`:'').join('')}</div>
+    <div class="tbsp">${tm.sets.map((o,j)=>BYK[o.k]?`<button type="button" class="cpk${j===TOPEN?' on':''}" data-topen="${j}" title="${esc(BYK[o.k].n)}"><img src="${BYK[o.k].img}" alt="${esc(BYK[o.k].n)}"></button>`:'').join('')}</div>
     ${tm.sets.map((o,j)=>BYK[o.k]?slotHTML(o,j,j===TOPEN):'').join('')}
     ${tm.sets.length<6?`<div class="tbadd"><div class="cps"><input type="text" class="tbq" data-tadd="1" placeholder="+ Add a Pokémon (search)" autocomplete="off" spellcheck="false"><div class="cpsug hide"></div></div><p class="note" style="margin:6px 0 0">New Pokémon start with their most used ladder set. Change anything.</p></div>`:''}
     <div class="cbtns" style="margin-top:12px"><button type="button" class="btn primary" data-tdone="1">Done</button><button type="button" class="btn" data-tbuse="1">Use in calc</button><button type="button" class="btn" data-tbexp="1">Export</button></div>

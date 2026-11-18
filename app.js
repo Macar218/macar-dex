@@ -192,7 +192,7 @@ function pkCard(p){
   const v=[0,1,2,3,4,5].map(i=>i===5?spdBase(p):stat50(p,i,SPON?32:0,1)),L=MEGAS[p.k]?[p,...MEGAS[p.k]]:null;
   return `<div class="pk" role="button" tabindex="0" data-k="${p.k}" style="${typeCol(p)}">${L||p.m?`<img class="mstone" src="${MEGAIMG}" alt="Mega" title="Has Mega Evolution">`:''}<span class="face"><span class="in">
     <span class="top"><b${p.n.length>8?` style="font-size:${p.n.length>13?9:p.n.length>11?10:p.n.length>9?11:12}px"`:''}>${esc(p.n)}</b>${chipHTML(p)}</span>
-    <span class="art"><span class="fav" data-fav="${p.k}" role="button" aria-label="Favourite" aria-pressed="${FAV.has(p.k)}">★</span><img src="${p.img}" alt="" loading="lazy" decoding="async"></span>
+    <span class="art"><span class="fav" data-fav="${p.k}" role="button" aria-label="Favourite: ${esc(p.n)}" aria-pressed="${FAV.has(p.k)}">★</span><img src="${p.img}" alt="" loading="lazy" decoding="async"></span>
     <span class="tps">${tpills(p.t)}</span>
     <span class="sts">${[0,1,2,3,4,5].map(i=>`<span class="${i===5?'sp':''}"><em style="color:${STATCOL[i]}">${STATS[i]}</em><b>${v[i]}</b></span>`).join('')}</span>
     <span class="abl1">${abOrder(p)}</span>
