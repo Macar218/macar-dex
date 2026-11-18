@@ -653,7 +653,7 @@ const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}
 const todayStr=(o=0)=>{const d=new Date(Date.now()+o*864e5);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
 function mulberry(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function seeded(seed,fn){const o=Math.random;Math.random=mulberry(seed);try{return fn()}finally{Math.random=o}}
-const SECS=[['mixed','Mixed'],['pokemon','Pokémon'],['speed','Speed'],['types','Types'],['abilities','Abilities'],['natures','Natures'],['moves','Moves']];
+const SECS=[['mixed','Mixed'],['pokemon','Pokémon'],['speed','Speed'],['types','Types'],['abilities','Abilities'],['natures','Natures'],['moves','Moves'],['items','Items']];
 const opt=(html,ok,k)=>({html,ok,k});
 const monOpt=(p,ok)=>opt(esc(p.n),ok,p.k);
 const typeStr=t=>tpills(t);
@@ -699,6 +699,17 @@ G.types=[
    return{prompt:`${typeStr([a])} attacks ${esc(p.n)}: how much damage?`,ik:p.k,opts:L.map(([v,l])=>opt(`<b>${l}</b>`,v===m)),keepOrder:1,compact:1,explain:`${a} vs ${p.t.join('/')} = ×${m}.`}},
  ()=>{const a=rnd(TYPES);const imm=POOL.filter(p=>effVs(a,p.t)===0),other=POOL.filter(p=>effVs(a,p.t)>0);if(!imm.length)return null;
    const c=rnd(imm);return{prompt:`Which Pokémon is immune to ${typeStr([a])}?`,opts:[monOpt(c,1),...pickN(other,3).map(p=>monOpt(p,0))],explain:`${esc(c.n)} (${c.t.join('/')}) takes no damage from ${a}.`}}
+];
+const IQ=()=>(window.ITEMS||[]).filter(x=>x.cat!=='Mega Stone'&&x.d&&x.d.length>12);
+const itOpt=(x,ok)=>opt(`<span class="iopt">${x.img?`<img src="${x.img}" alt="">`:''}<b>${bi('i',x.n)}</b></span>`,ok,x.n);
+G.items=[
+ ()=>{const L=IQ();if(L.length<4)return null;const c=rnd(L);
+   return{prompt:`Which item is this?<div class="quote">${dsc('i',c.n,c.d)}</div>`,opts:[itOpt(c,1),...pickN(L,3,x=>x!==c&&x.cat===c.cat).concat(pickN(L,3,x=>x!==c)).slice(0,3).map(x=>itOpt(x,0))],compact:1,explain:`<b>${bi('i',c.n)}</b>: ${dsc('i',c.n,c.d)}`}},
+ ()=>{const L=IQ();if(L.length<4)return null;const c=rnd(L.filter(x=>x.u&&x.u.length)||L);
+   return{prompt:`What does <span class="iopt">${c.img?`<img src="${c.img}" alt="">`:''}<b>${bi('i',c.n)}</b></span> do?`,opts:[opt(dsc('i',c.n,c.d),1),...pickN(L,3,x=>x!==c&&x.d!==c.d).map(x=>opt(dsc('i',x.n,x.d),0))],explain:`<b>${bi('i',c.n)}</b>${c.u&&c.u.length?` · used by ${c.u.slice(0,4).map(([k])=>BYK[k]?esc(BYK[k].n):'').filter(Boolean).join(', ')}`:''}.`}},
+ ()=>{const M=(window.ITEMS||[]).filter(x=>x.cat==='Mega Stone'&&x.mega&&BYK[x.mega.toLowerCase().replace(/[^a-z0-9]/g,'')]);if(!M.length)return null;const c=rnd(M);const mk=c.mega.toLowerCase().replace(/[^a-z0-9]/g,''),mp=BYK[mk];
+   const others=P.filter(p=>p.m&&p.k!==mk);
+   return{prompt:`Which Pokémon Mega Evolves with <span class="iopt">${c.img?`<img src="${c.img}" alt="">`:''}<b>${esc(c.n)}</b></span>?`,opts:[monOpt(mp,1),...pickN(others,3).map(p=>monOpt(p,0))],explain:`${esc(c.n)} → ${esc(mp.n)}.`}}
 ];
 const HK=()=>Object.keys(HOLD);
 G.abilities=[
@@ -760,7 +771,14 @@ function focusQs(k){
 const DAILY_N=20;
 const DAILY_MSG=['No hits at all. Go through the basics before the next one.','Barely anything. Open the Dex and study.','Very weak. Review stats and speed tiers.','Still lots of gaps. Study the most used Pokémon.','Below average. Focus on your weak sections.','Half right. Decent base, a lot to fix.','Passing, but you are leaving points behind.','Good. A few holes left.','Very good. Strong knowledge of the format.','Almost perfect. One slip.','Perfect. No mistakes.'];
 function dailyPool(){const u=USAGES.showdown||{};return P.filter(p=>(u[p.k]||0)>=0.1)}
-function dailyQs(){const seed=parseInt(todayStr().replace(/-/g,''),10);const keep=POOL,kU=U;U=USAGES.showdown||U;POOL=dailyPool();try{return Array.from({length:DAILY_N},(_,i)=>seeded(seed*100+i,()=>makeQ(true)))}finally{POOL=keep;U=kU}}
+const DAILY_MIX=[['speed',6],['pokemon+types',8],['abilities',2],['moves',2],['items',1],['natures',1]];
+function secQ(sec){const gens=sec==='pokemon+types'?[...G.pokemon.map(g=>['pokemon',g]),...G.types.map(g=>['types',g])]:G[sec].map(g=>[sec,g]);
+  for(let t=0;t<40;t++){const [sc,g]=rnd(gens);const q=g();if(q){q.sec=sc;return q}}return null}
+function dailyQs(){const seed=parseInt(todayStr().replace(/-/g,''),10);const keep=POOL,kU=U;U=USAGES.showdown||U;POOL=dailyPool();
+  try{const out=[],seen=new Set();let i=0;
+    DAILY_MIX.forEach(([sec,n])=>{for(let c=0;c<n;c++){let q=null;for(let t=0;t<12;t++){const x=seeded(seed*1000+(i++),()=>secQ(sec));if(x&&!seen.has(qkey(x))){q=x;break}}if(q){seen.add(qkey(q));out.push(q)}}});
+    return seeded(seed+7,()=>shuffle(out));
+  }finally{POOL=keep;U=kU}}
 /* ---- full quizzes ---- */
 const MLAB={1:'×1',2:'×2',.5:'×½',0:'×0'};
 const SPF={sp_s0:['0=','0 SP'],sp_s32:['32=','32 SP'],sp_s32p:['32+','32 SP +']};
@@ -817,6 +835,8 @@ function showQMenu(){
   $('#qMenu').classList.remove('hide');$('#qPlay').classList.add('hide');
   $('#qMenuPool').appendChild($('#qPoolRow'));renderQMenu();
 }
+function dAvg(){const v=Object.values(QZ.daily.scores||{});return v.length?Math.round(v.reduce((a,b)=>a+b,0)/(v.length*DAILY_N)*100):null}
+function flame(n,avg){return `<span class="flame${n?'':' off'}" title="Daily streak and average score"><i>🔥</i>${n}<small>day${n===1?'':'s'}</small>${avg!==null?`<em>${avg}% avg</em>`:''}</span>`}
 function renderQMenu(){
   const d=QZ.daily,t=todayStr(),doneToday=d.scores[t]!==undefined,live=d.last===t||d.last===todayStr(-1)?d.streak:0;
   const nm=QZ.missed.length,np=POOL.length;
@@ -825,7 +845,7 @@ function renderQMenu(){
   const T=(m,c,big,title,sub,extra='',cls='')=>`<button class="qt ${cls}" data-m="${m}" style="--c:${c}"><span class="big">${big}</span><b>${title}</b><small>${sub}</small>${extra}</button>`;
   $('#qMenuBody').innerHTML=`
    <div class="qgrp">Daily</div>
-   <div class="qtiles">${T('daily','#ffb02e','20','Daily challenge',`${doneToday?`Done today: ${d.scores[t]}/20`:'Same 20 for everyone'} · ${live} day streak`,st('daily'),'wide')}</div>
+   <div class="qtiles">${T('daily','#ffb02e','20',`Daily challenge ${flame(live,dAvg())}`,`${doneToday?`Done today: ${d.scores[t]}/20`:'6 speed · 8 Pokémon and types · 2 abilities · 2 moves · 1 item · 1 nature'}`,st('daily'),'wide')}</div>
    <div class="qgrp">Practice</div>
    <div class="qtiles">
     ${T('inf','#4f7cff','∞','Endless','Pick a section, no end')}
@@ -854,7 +874,7 @@ function renderQuizUI(){
   $('#qSec').innerHTML=SECS.map(([k,l])=>`<button class="gchip" data-s="${k}" aria-pressed="${k===QZ.sec}">${l}</button>`).join('');
   $('.stats',$('#qPlay')).classList.toggle('hide',SPECM.includes(m)||m==='daily');
   $('#qReset').classList.toggle('hide',!SECM.includes(m));
-  $('#qBanner').innerHTML=m==='daily'?`<div class="banner">Daily challenge · 20 questions, the same for everyone today · streak ${QZ.daily.streak} day${QZ.daily.streak===1?'':'s'}</div>`
+  $('#qBanner').innerHTML=m==='daily'?`<div class="banner">Daily challenge · 20 questions, the same for everyone today ${flame(QZ.daily.last===todayStr()||QZ.daily.last===todayStr(-1)?QZ.daily.streak:0,dAvg())}</div>`
     :m==='focus'?`<div class="banner">Focus quiz: ${esc((BYK[QZ.focus]||{}).n||'')}</div>`
     :SPF[m]?`<div class="banner">${QZ.run.total} Pokémon · pool ${$('#qPool').selectedOptions[0].textContent}. No base Speed shown: recall the number.</div>`
     :SECM.includes(m)&&QZ.sec==='mixed'&&m!=='time'?`<div class="note" style="margin:0 0 8px">Adaptive: sections you miss more often come up more often.</div>`:'';
@@ -1022,7 +1042,7 @@ function renderHome(){
   const bars=rows.sort((a,b)=>a.pc-b.pc).map(r=>`<div class="pbar"><span>${r.l}</span><span class="t"><i style="width:${r.pc}%"></i></span><b>${r.pc}%</b></div>`).join('');
   const nm=QZ.missed.length;
   $('#tab-home').innerHTML=`<div class="hello">
-    <div class="card daily"><small>Daily challenge</small><b>${doneToday?`Done today: ${d.scores[t]}/20`:'20 mixed questions'}</b><p class="note" style="margin:6px 0 12px">${live} day streak${d.best?` · best ${d.best}`:''}</p><button class="btn primary" data-home="daily">${doneToday?'Play again (no streak change)':'Start today\'s challenge'}</button></div>
+    <div class="card daily"><small>Daily challenge ${flame(live,dAvg())}</small><b>${doneToday?`Done today: ${d.scores[t]}/20`:'20 mixed questions'}</b><p class="note" style="margin:6px 0 12px">6 speed · 8 Pokémon and types · 2 abilities · 2 moves · 1 item · 1 nature${d.best?` · best streak ${d.best}`:''}</p><button class="btn primary" data-home="daily">${doneToday?'Play again (no streak change)':'Start today\'s challenge'}</button></div>
 
   </div><div class="tiles">${tiles.map(([k,t,d,a,b])=>`<button class="tile${k==='quiz'?' wide':''}" data-tab="${k}" style="--t1:${a};--t2:${b}">${svg(k)}<b>${t}</b><span>${d}</span></button>`).join('')}</div><div class="card prog" style="margin-top:14px"><h3 class="h">Review</h3>${tot?`<div class="note" style="margin:0 0 8px">${okc} correct out of ${tot} (${Math.round(okc/tot*100)}%)${weak.length?` · weakest: ${weak.map(w=>`<b>${w.l}</b> ${w.pc}%`).join(', ')}`:''}</div>${bars}`:'<div class="note" style="margin:0 0 8px">No answers yet. Your weak points will show here.</div>'}
       <div class="row" style="margin-top:12px">${nm?`<button class="btn primary" data-home="review">Review mistakes (${nm})</button>`:''}<button class="btn" data-quiz="mixed">Mixed quiz</button></div></div>`;
