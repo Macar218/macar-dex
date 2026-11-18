@@ -918,7 +918,7 @@ function finishQ(ok,msg){
   const counted=!q.rt;if(counted)r.n++;
   const s=secStat(q.sec),all=secStat('_all');if(counted)s.n++;
   const k=qkey(q);
-  if(ok){if(counted){s.ok++;r.ok++}QZ.streak++;if(QZ.streak>s.best)s.best=QZ.streak;if(QZ.streak>all.best)all.best=QZ.streak;QZ.missed=QZ.missed.filter(x=>qkey(x)!==k)}
+  if(ok){if(counted){s.ok++;r.ok++}QZ.streak++;if(QZ.streak>s.best)s.best=QZ.streak;if(QZ.streak>all.best)all.best=QZ.streak;if(QZ.mode==='review')QZ.missed=QZ.missed.filter(x=>qkey(x)!==k)}
   else{
     QZ.streak=0;if(counted)r.wrong.push(q);
     if(!QZ.missed.some(x=>qkey(x)===k)){
