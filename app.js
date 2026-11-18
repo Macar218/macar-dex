@@ -796,10 +796,10 @@ function natureQ(n){
        finishQ(ok,`${n[0]} (${ESN('n',n[0])}): ${natFx(n)}.`)})}};
 }
 const SPECNAME={sp_s0:'Speed · 0 SP',sp_s32:'Speed · 32 SP',sp_s32p:'Speed · 32 SP +',sp_types:'Type chart · 324',sp_nat:'Natures · 25'};
-const SPECM=Object.keys(SPECNAME),FIXEDM=['review','daily','focus',...SPECM];
-const SECM=['inf','r20','r50','r100','time'],TRACKM=['daily','r20','r50','r100',...SPECM],POOLM=['inf','r20','r50','r100','time','sp_s0','sp_s32','sp_s32p'];
+const SPECM=Object.keys(SPECNAME),FIXEDM=['review','daily','focus','top30',...SPECM];
+const SECM=['inf','r20','r50','r100','time'],TRACKM=['daily','r20','r50','r100','top30',...SPECM],POOLM=['inf','r20','r50','r100','time','sp_s0','sp_s32','sp_s32p'];
 const RANDN={r20:20,r50:50,r100:100};
-const MODENAME={inf:'Endless',r20:'Random 20',r50:'Random 50',r100:'Random 100',time:'60 seconds',review:'Review mistakes',daily:'Daily challenge',focus:'Focus quiz',...SPECNAME};
+const MODENAME={inf:'Endless',r20:'Random 20',r50:'Random 50',r100:'Random 100',time:'60 seconds',review:'Review mistakes',daily:'Daily challenge',focus:'Focus quiz',top30:'Top 30 · Regionals',...SPECNAME};
 const histKey=m=>SPF[m]?m+'|'+POOLSEL:m;
 const hist=m=>QZ.hist[histKey(m)]||[];
 function spark(a,w,hh,big){
@@ -821,6 +821,7 @@ function startRun(mode,k){
   if(SPF[mode]){r.queue=shuffle(POOL).map(p=>speedNumQ(p,mode));r.total=r.queue.length}
   if(mode==='sp_types'){r.queue=shuffle(TYPES.flatMap(a=>TYPES.map(d=>typeQ(a,d,Math.random()<.5))));r.total=r.queue.length}
   if(mode==='sp_nat'){r.queue=shuffle(NATS).map(natureQ);r.total=r.queue.length}
+  if(mode==='top30'){r.queue=top30Qs();r.total=r.queue.length}
   QZ.run=r;renderQuizUI();
   if(r.total===0){renderResult();return}
   if(mode==='time')QZ.timer=setInterval(()=>{r.left--;const e=$('#qTimer');if(e)e.textContent=r.left+'s';if(r.left<=0){clearInterval(QZ.timer);clearTimeout(QZ.adv);renderResult()}},1000);
@@ -854,6 +855,7 @@ function renderQMenu(){
    </div>
    <div class="qgrp">Full quizzes · track your progress</div>
    <div class="qtiles">
+    ${T('top30','#ffd23f',30,'Top 30 · Regionals','Ability, moves, item, spread, teammates and Speed of the 30 most used',st('top30'),'wide')}
     ${T('sp_s0','#ff4fa8',np,'Speed · 0 SP','Every Pokémon in the pool',st('sp_s0'),'wide')}
     ${T('sp_s32','#ff4fa8',np,'Speed · 32 SP','Every Pokémon in the pool',st('sp_s32'),'wide')}
     ${T('sp_s32p','#ff4fa8',np,'Speed · 32 SP +','Every Pokémon in the pool',st('sp_s32p'),'wide')}
@@ -869,9 +871,10 @@ function renderQuizUI(){
   $('#qTitle').textContent=MODENAME[m]||'';
   $('#qSec').classList.toggle('hide',!SECM.includes(m));
   $('#qSec').innerHTML=SECS.map(([k,l])=>`<button class="gchip" data-s="${k}" aria-pressed="${k===QZ.sec}">${l}</button>`).join('');
-  $('.stats',$('#qPlay')).classList.toggle('hide',SPECM.includes(m)||m==='daily');
+  $('.stats',$('#qPlay')).classList.toggle('hide',SPECM.includes(m)||m==='daily'||m==='top30');
   $('#qReset').classList.toggle('hide',!SECM.includes(m));
   $('#qBanner').innerHTML=m==='daily'?`<div class="banner">Daily challenge · 20 questions, the same for everyone today ${flame(QZ.daily.last===todayStr()||QZ.daily.last===todayStr(-1)?QZ.daily.streak:0,dAvg())}</div>`
+    :m==='top30'?`<div class="banner">Top 30 · ${QZ.run.total} questions about the 30 most used Pokémon (${esc((SRC.official||{}).sample||'')}). Sets and spreads: Smogon ladder.</div>`
     :m==='focus'?`<div class="banner">Focus quiz: ${esc((BYK[QZ.focus]||{}).n||'')}</div>`
     :SPF[m]?`<div class="banner">${QZ.run.total} Pokémon · pool ${$('#qPool').selectedOptions[0].textContent}. No base Speed shown: recall the number.</div>`
     :SECM.includes(m)&&QZ.sec==='mixed'&&m!=='time'?`<div class="note" style="margin:0 0 8px">Adaptive: sections you miss more often come up more often.</div>`:'';
@@ -1086,3 +1089,99 @@ applySrc();
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(q,100)});
   window.addEventListener('pageshow',q);q();
 })();
+
+/* ---------- TOP 30 (Regionals) ---------- */
+const T30N=30;
+let T30ON=false;
+const O_U=()=>USAGES.official||{};
+function top30(){
+  return BASES.map(p=>({p,v:sumSrc('official',p)})).filter(x=>x.v>0).sort((a,b)=>b.v-a.v||a.p.n.localeCompare(b.p.n)).slice(0,T30N);
+}
+const t30Forms=b=>[b,...(MEGAS[b.k]||[])].filter(f=>(O_U()[f.k]||0)>0).sort((a,c)=>O_U()[c.k]-O_U()[a.k]);
+const SPN=['HP','Atk','Def','SpA','SpD','Spe'];
+const spStr=v=>v.map((x,i)=>x?x+' '+SPN[i]:'').filter(Boolean).join(' · ')||'no SP';
+const natMult=n=>{const e=NATS.find(x=>x[0]===n);return e?(e[1]==='Spe'?1.1:e[2]==='Spe'?.9:1):1};
+const bkOf=k=>BKEY[k]||k.replace(/mega[xyz]?$/,'');
+function t30Panel(f,on){
+  const S=(window.SETS||{})[f.k],C=(window.CSETS||{})[f.k];
+  const head=`<div class="t30ph"><img src="${f.img}" alt=""><div><b>${nameHTML(f)}</b><div>${tpills(f.t)}</div></div><button class="btn t30o" data-open="${f.k}">Details</button></div>`;
+  if(!S&&!C)return `<div class="t30p${on?'':' hide'}" data-pf="${f.k}">${head}<p class="note">No set data for this form (under the Smogon cut-off).</p></div>`;
+  const chip=(h,v)=>`<span class="t30c">${h} <b>${v}</b></span>`;
+  const ab=S?S.a.filter(x=>x[1]>=1).slice(0,2).map(([n,v])=>chip(bi('a',n),Math.round(v)+'%')).join(''):'';
+  const it=C?C.i.map(([n,v])=>chip(bi('i',n),Math.round(v)+'%')).join(''):'';
+  const mv=S?S.m.slice(0,6).map(([n,v])=>chip(bi('m',n),(v>=1?Math.round(v):'<1')+'%')).join(''):'';
+  const sp=C?C.s.map(([n,v,pc])=>`<div class="t30sp"><b>${bi('n',n)}</b><span>${spStr(v)}</span><i>${Math.round(pc)}%</i></div>`).join(''):'';
+  const pt=S?S.t.slice(0,6).map(([k,v])=>{const q=BYK[k];return q?`<button class="t30tm" data-open="${k}"><img src="${q.img}" alt=""><span>${esc(q.n)}</span><b>${Math.round(v)}%</b></button>`:''}).join(''):'';
+  let spe='';
+  if(C&&C.s[0]){const s=C.s[0],v=stat50(f,5,s[1][5],natMult(s[0]));spe=`<div class="speedstrip"><div><small>Usual spread</small><b>${v}</b></div><div><small>+ Scarf</small><b>${Math.floor(v*1.5)}</b></div><div><small>+ Tailwind</small><b>${v*2}</b></div></div>`}
+  const blk=(t,h)=>h?`<h4>${t}</h4>${h}`:'';
+  return `<div class="t30p${on?'':' hide'}" data-pf="${f.k}">${head}${blk('Ability',ab)}${blk('Item',it)}${blk('Nature and spread',sp)}${blk('Moves',mv?`<div class="t30cs">${mv}</div>`:'')}${blk('Usual teammates',pt?`<div class="t30tms">${pt}</div>`:'')}${blk('Speed with the usual spread',spe)}</div>`;
+}
+function t30Card(x,i,mx){
+  const b=x.p,fs=t30Forms(b);if(!fs.length)return '';
+  const tabs=fs.length>1?`<div class="t30tabs">${fs.map((f,j)=>`<button data-tf="${f.k}" aria-pressed="${j===0}">${f.m?'✦ ':''}${megaLbl(f)} <b>${fmtU(O_U()[f.k])}</b></button>`).join('')}</div>`:'';
+  return `<article class="t30card"><div class="t30h"><span class="t30rk">#${i+1}</span><div class="t30bar"><i style="width:${Math.max(3,x.v/mx*100)}%"></i></div><b class="t30u t${tierOf(x.v)}">${fmtU(x.v)}</b></div>${tabs}${fs.map((f,j)=>t30Panel(f,j===0)).join('')}</article>`;
+}
+function renderT30(){
+  const L=top30(),mx=L.length?L[0].v:1,o=SRC.official||{};
+  $('#t30').innerHTML=`<div class="t30top"><div><h3 class="h" style="margin:0">Top 30 · Regionals</h3><p class="note" style="margin:4px 0 0">${esc(o.sample||'No Regionals data')}</p></div>
+   <div class="row"><label class="field"><span class="note">Regionals used</span><select id="t30Off">${[['1','Last 1'],['2','Last 2'],['3','Last 3'],['5','Last 5'],['all','All this regulation']].map(([v,l])=>`<option value="${v}"${v===OFFN?' selected':''}>${l}</option>`).join('')}</select></label><button class="btn primary" id="t30Quiz">Quiz Top 30</button></div></div>
+   <p class="note">Usage = % of teams that bring the Pokémon, base form and Megas together (Regionals). Sets, items, spreads and teammates come from the Smogon ladder (Reg M-C, 1760+): there is no set data for Regionals.</p>
+   <div class="t30grid">${L.map((x,i)=>t30Card(x,i,mx)).join('')}</div>`;
+}
+$('#t30Btn').addEventListener('click',()=>{
+  T30ON=!T30ON;$('#tab-dex').classList.toggle('t30on',T30ON);$('#t30Btn').setAttribute('aria-pressed',T30ON);
+  $('#t30').classList.toggle('hide',!T30ON);if(T30ON){renderT30()}else renderCards();
+});
+$('#t30').addEventListener('click',e=>{
+  if(e.target.closest('#t30Quiz')){DONE.quiz=1;showTab('quiz');startRun('top30');return}
+  const t=e.target.closest('[data-tf]');
+  if(t){const card=t.closest('.t30card');
+    card.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',b===t));
+    card.querySelectorAll('.t30p').forEach(p=>p.classList.toggle('hide',p.dataset.pf!==t.dataset.tf));return}
+  const o=e.target.closest('[data-open]');if(o)openCard(o.dataset.open);
+});
+$('#t30').addEventListener('change',e=>{
+  if(e.target.id!=='t30Off')return;
+  OFFN=e.target.value;try{localStorage.setItem('vgcOff',OFFN)}catch(x){}
+  buildOfficial();applySrc();$('#pOff').value=OFFN;renderT30();
+});
+
+/* ---- Top 30 quiz ---- */
+function top30Qs(){
+  const O=O_U(),S=window.SETS||{},C=window.CSETS||{};
+  const tops=top30().map(x=>x.p);
+  const forms=b=>[b,...(MEGAS[b.k]||[])].filter(f=>(O[f.k]||0)>=1&&(S[f.k]||C[f.k]));
+  const pickForm=b=>{const L=forms(b);if(!L.length)return null;let r=Math.random()*L.reduce((s,f)=>s+O[f.k],0);for(const f of L){r-=O[f.k];if(r<=0)return f}return L[0]};
+  const allF=tops.flatMap(b=>forms(b));
+  const uniq=a=>[...new Set(a)];
+  const allAb=uniq(allF.flatMap(f=>((S[f.k]||{}).a||[]).map(x=>x[0])));
+  const allMv=uniq(allF.flatMap(f=>((S[f.k]||{}).m||[]).map(x=>x[0])));
+  const allIt=uniq(allF.filter(f=>!f.m).flatMap(f=>((C[f.k]||{}).i||[]).map(x=>x[0])));
+  const sprKey=s=>s[0]+'|'+s[1].join('/');
+  const allSpr=uniq(allF.flatMap(f=>((C[f.k]||{}).s||[]).map(sprKey))).map(k=>{const [n,v]=k.split('|');return [n,v.split('/').map(Number)]});
+  const sprHtml=s=>`<b>${bi('n',s[0])}</b><small>${spStr(s[1])}</small>`;
+  const gens={
+   ab:f=>{const s=S[f.k];if(!s||!s.a.length)return null;const c=s.a[0][0],own=s.a.map(x=>x[0]);
+     const bad=uniq([...f.a.filter(x=>x!==c),...pickN(allAb,6,x=>!own.includes(x))]).filter(x=>x!==c).slice(0,3);if(bad.length<3)return null;
+     return{sec:'abilities',prompt:`Which ability does <b>${esc(f.n)}</b> run most often?`,ik:f.k,opts:[opt(bi('a',c),1),...bad.map(x=>opt(bi('a',x),0))],compact:1,explain:`${esc(f.n)}: ${s.a.slice(0,3).map(([n,v])=>esc(n)+' '+Math.round(v)+'%').join(' · ')}.`}},
+   mv:f=>{const s=S[f.k];if(!s||s.m.length<4)return null;const good=s.m.filter(x=>x[1]>=60),pool=good.length?good:[s.m[0]];const c=rnd(pool)[0];
+     const own=s.m.map(x=>x[0].toLowerCase()),lr=(window.LEARN||{})[bkOf(f.k)]||[];
+     const learn=lr.map(i=>MV[i]&&MV[i].n).filter(Boolean).filter(n=>!own.includes(n.toLowerCase()));
+     const bad=pickN(learn.length>=3?learn:allMv.filter(n=>!own.includes(n.toLowerCase())),3);if(bad.length<3)return null;
+     return{sec:'moves',prompt:`Which of these moves does <b>${esc(f.n)}</b> run in most of its sets?`,ik:f.k,opts:[opt(bi('m',c),1),...bad.map(x=>opt(bi('m',x),0))],compact:1,explain:`${esc(f.n)}: ${s.m.slice(0,6).map(([n,v])=>esc(n)+' '+Math.round(v)+'%').join(' · ')}.`}},
+   it:f=>{const c=(C[f.k]||{}).i;if(!c||!c.length||f.m)return null;const own=c.map(x=>x[0]);const bad=pickN(allIt,3,x=>!own.includes(x));if(bad.length<3)return null;
+     return{sec:'items',prompt:`Which item does <b>${esc(f.n)}</b> hold most often?`,ik:f.k,opts:[opt(bi('i',c[0][0]),1),...bad.map(x=>opt(bi('i',x),0))],compact:1,explain:`${esc(f.n)}: ${c.map(([n,v])=>esc(n)+' '+Math.round(v)+'%').join(' · ')}.`}},
+   spr:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length)return null;const c=s[0];const bad=pickN(allSpr,3,x=>sprKey(x)!==sprKey(c));if(bad.length<3)return null;
+     return{sec:'natures',prompt:`What is the most common spread of <b>${esc(f.n)}</b>?`,ik:f.k,opts:[opt(sprHtml(c),1),...bad.map(x=>opt(sprHtml(x),0))],explain:`${esc(f.n)}: ${esc(c[0])} ${spStr(c[1])} (${Math.round(c[2])}%).`}},
+   par:f=>{const t=(S[f.k]||{}).t;if(!t||t.length<4)return null;const own=new Set([bkOf(f.k),...t.map(x=>bkOf(x[0]))]);
+     const good=t.slice(0,4).filter(x=>BYK[x[0]]);if(!good.length)return null;const c=BYK[rnd(good)[0]];
+     const bad=pickN(tops,3,b=>!own.has(b.k));if(bad.length<3)return null;
+     return{sec:'pokemon',prompt:`Which Pokémon is a usual teammate of <b>${esc(f.n)}</b>?`,ik:f.k,opts:[monOpt(c,1),...bad.map(b=>monOpt(b,0))],explain:`${esc(f.n)}: ${t.slice(0,6).map(([k,v])=>esc((BYK[k]||{n:k}).n)+' '+Math.round(v)+'%').join(' · ')}.`}},
+   spe:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length)return null;const c=s[0],v=stat50(f,5,c[1][5],natMult(c[0]));
+     return{type:'num',sec:'speed',prompt:`Speed of <b>${esc(f.n)}</b> with its usual spread (${esc(c[0])} · ${spStr(c[1])})?`,ik:f.k,answer:v,hint:'Level 50. ⌊(base + 20 + SP) × nature⌋. Type the number.',explain:`Base ${f.s} → ${v}.`}}
+  };
+  const out=[],seen=new Set();
+  tops.forEach(b=>{let n=0;for(const t of shuffle(Object.keys(gens))){if(n>=2)break;const f=pickForm(b);if(!f)break;const q=gens[t](f);if(q&&!seen.has(qkey(q))){seen.add(qkey(q));out.push(q);n++}}});
+  return shuffle(out);
+}
