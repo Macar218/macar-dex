@@ -706,10 +706,7 @@ G.items=[
  ()=>{const L=IQ();if(L.length<4)return null;const c=rnd(L);
    return{prompt:`Which item is this?<div class="quote">${dsc('i',c.n,c.d)}</div>`,opts:[itOpt(c,1),...pickN(L,3,x=>x!==c&&x.cat===c.cat).concat(pickN(L,3,x=>x!==c)).slice(0,3).map(x=>itOpt(x,0))],compact:1,explain:`<b>${bi('i',c.n)}</b>: ${dsc('i',c.n,c.d)}`}},
  ()=>{const L=IQ();if(L.length<4)return null;const c=rnd(L.filter(x=>x.u&&x.u.length)||L);
-   return{prompt:`What does <span class="iopt">${c.img?`<img src="${c.img}" alt="">`:''}<b>${bi('i',c.n)}</b></span> do?`,opts:[opt(dsc('i',c.n,c.d),1),...pickN(L,3,x=>x!==c&&x.d!==c.d).map(x=>opt(dsc('i',x.n,x.d),0))],explain:`<b>${bi('i',c.n)}</b>${c.u&&c.u.length?` · used by ${c.u.slice(0,4).map(([k])=>BYK[k]?esc(BYK[k].n):'').filter(Boolean).join(', ')}`:''}.`}},
- ()=>{const M=(window.ITEMS||[]).filter(x=>x.cat==='Mega Stone'&&x.mega&&BYK[x.mega.toLowerCase().replace(/[^a-z0-9]/g,'')]);if(!M.length)return null;const c=rnd(M);const mk=c.mega.toLowerCase().replace(/[^a-z0-9]/g,''),mp=BYK[mk];
-   const others=P.filter(p=>p.m&&p.k!==mk);
-   return{prompt:`Which Pokémon Mega Evolves with <span class="iopt">${c.img?`<img src="${c.img}" alt="">`:''}<b>${esc(c.n)}</b></span>?`,opts:[monOpt(mp,1),...pickN(others,3).map(p=>monOpt(p,0))],explain:`${esc(c.n)} → ${esc(mp.n)}.`}}
+   return{prompt:`What does <span class="iopt">${c.img?`<img src="${c.img}" alt="">`:''}<b>${bi('i',c.n)}</b></span> do?`,opts:[opt(dsc('i',c.n,c.d),1),...pickN(L,3,x=>x!==c&&x.d!==c.d).map(x=>opt(dsc('i',x.n,x.d),0))],explain:`<b>${bi('i',c.n)}</b>${c.u&&c.u.length?` · used by ${c.u.slice(0,4).map(([k])=>BYK[k]?esc(BYK[k].n):'').filter(Boolean).join(', ')}`:''}.`}}
 ];
 const HK=()=>Object.keys(HOLD);
 G.abilities=[
