@@ -6,6 +6,6 @@ Study app for Pokémon Champions VGC (Reg M-C, Level 50): Dex, speed tiers, dama
 - Install: iPhone → Safari → Share → *Add to Home Screen*. Desktop → Chrome or Edge → *Install app*.
 - Works offline after the first visit. Usage data is refreshed every Monday.
 
-Data: Pokémon Showdown (Champions ruleset), Smogon usage stats, MunchStats, PokeAPI sprites. Damage engine: [@smogon/calc](https://github.com/smogon/damage-calc) (MIT).
+Data: Pokémon Showdown (Champions ruleset), Smogon usage stats, MunchStats, PokeAPI sprites. Damage engine: [@smogon/calc](https://github.com/smogon/damage-calc) (MIT, see [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)).
 
 Unofficial fan project. Pokémon and all related names are trademarks of Nintendo, Creatures Inc. and GAME FREAK inc.
