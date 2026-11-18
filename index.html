@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="theme-color" content="#2a6af0">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Macar Dex</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -267,7 +267,8 @@ tr:hover td{background:color-mix(in srgb,var(--accent-soft) 55%,transparent)}
 .shead p{margin:0;color:var(--muted);font-size:13px}
 .sec,.card h2,.hero h2,.qq{font-family:var(--display)}
 /* dock */
-#tabs{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);width:min(520px,calc(100% - 20px));z-index:15}
+#tabs{position:fixed;left:50%;bottom:calc(10px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:min(520px,calc(100% - 20px));z-index:15;transition:opacity .15s}
+#tabs.kbopen{opacity:0;pointer-events:none}
 .dockbar{display:flex;gap:2px;background:rgba(16,20,42,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);border-radius:24px;padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.55)}
 .dockbar button,.sheet button{font:inherit;background:none;border:0;color:var(--muted);cursor:pointer;border-radius:18px}
 .dockbar button{flex:1;padding:8px 2px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase}
@@ -937,7 +938,7 @@ body.introing{overflow:hidden}
 .qt .st{margin-top:auto;padding-top:6px;font-size:11px;font-family:var(--mono);color:#b7c4e8}.qt .st b{display:inline;font-size:11px;color:#4fe3a2;margin:0}
 .qt .spark{width:90px;height:26px;margin-top:2px}
 .qt.wide{grid-column:1/-1;min-height:104px}
-.qt.wide .spark{position:absolute;right:14px;bottom:12px;width:110px;height:34px}
+
 #qMenuPool{margin-bottom:4px}
 /* results history */
 .hist{margin:16px auto 6px;max-width:420px;text-align:left}
@@ -1078,6 +1079,17 @@ body.introing{overflow:hidden}
  .cgrid[data-seg="0"] #cP2,.cgrid[data-seg="0"] #cField,.cgrid[data-seg="1"] #cP1,.cgrid[data-seg="1"] #cField,.cgrid[data-seg="f"] #cP1,.cgrid[data-seg="f"] #cP2{display:none}
 }
 .dev h1{cursor:pointer}
+.qt .qsc{margin-top:auto;padding-top:8px;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;line-height:1.15}
+.qt .qsc small{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.qt .qsc b{font-family:var(--mono);font-size:22px;font-weight:800;color:#fff;margin:0}
+.qt .qsc em{font-style:normal;font-size:12px;font-weight:700;color:var(--muted)}.qt .qsc em.up{color:#4fe3a2}.qt .qsc em.dn{color:#ff8a8a}
+.qt .qsc i{font-style:normal;font-size:10.5px;color:#b7c4e8;font-family:var(--mono);width:100%}
+.qt .qsc .spark{display:none}
+.qt.wide{padding-right:150px;min-height:136px}
+.qt.wide .qsc{position:absolute;top:50%;right:12px;transform:translateY(-50%);margin:0;padding:8px 10px;width:128px;flex-direction:column;flex-wrap:nowrap;align-items:flex-end;text-align:right;background:rgba(5,10,30,.55);border:1px solid color-mix(in srgb,var(--c) 45%,var(--line));border-radius:14px}
+.qt.wide .qsc b{font-size:26px}.qt.wide .qsc i{width:auto;white-space:nowrap;font-size:10px}.qt.wide .qsc{padding:6px 10px;gap:1px}
+.qt.wide .qsc .spark{display:block;position:static;width:104px;height:20px;margin-top:3px}
+.qt.wide .st{max-width:100%}
 .tbadd{border:1px dashed var(--line);border-radius:14px;padding:10px}
 @media (max-width:700px){.tbg{grid-template-columns:minmax(0,1fr)}}
 .iimg{width:36px;height:36px;flex:none;image-rendering:auto}

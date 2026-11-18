@@ -820,7 +820,8 @@ function showQMenu(){
 function renderQMenu(){
   const d=QZ.daily,t=todayStr(),doneToday=d.scores[t]!==undefined,live=d.last===t||d.last===todayStr(-1)?d.streak:0;
   const nm=QZ.missed.length,np=POOL.length;
-  const st=m=>{const a=hist(m);if(!a.length)return '<span class="st">No attempts yet</span>';const l=a[a.length-1].pc,b=Math.max(...a.map(x=>x.pc));return `<span class="st"><b>${l}%</b> last · ${b}% best · ${a.length}×</span>${spark(a.slice(-10),90,26)}`};
+  const st=m=>{const a=hist(m);if(!a.length)return '<span class="st">No attempts yet</span>';const l=a[a.length-1].pc,b=Math.max(...a.map(x=>x.pc)),pv=a.length>1?a[a.length-2].pc:null,dl=pv===null?null:l-pv;
+    return `<span class="qsc"><small>Last</small><b>${l}%</b>${dl===null?'<em>first try</em>':`<em class="${dl>0?'up':dl<0?'dn':''}">${dl>0?'▲ +'+dl:dl<0?'▼ '+dl:'= same'}</em>`}<i>best ${b}% · ${a.length} ${a.length>1?'tries':'try'}</i>${a.length>1?spark(a.slice(-10),90,26):''}</span>`};
   const T=(m,c,big,title,sub,extra='',cls='')=>`<button class="qt ${cls}" data-m="${m}" style="--c:${c}"><span class="big">${big}</span><b>${title}</b><small>${sub}</small>${extra}</button>`;
   $('#qMenuBody').innerHTML=`
    <div class="qgrp">Daily</div>
@@ -828,7 +829,7 @@ function renderQMenu(){
    <div class="qgrp">Practice</div>
    <div class="qtiles">
     ${T('inf','#4f7cff','∞','Endless','Pick a section, no end')}
-    ${T('time','#ff5b7f','60s','60 seconds','As many as you can')}
+    ${T('time','#ff5a4f','60s','60 seconds','As many as you can')}
     ${T('r20','#35c4e8','20','Random 20','Mixed sections',st('r20'))}
     ${T('r50','#35c4e8','50','Random 50','Mixed sections',st('r50'))}
     ${T('r100','#35c4e8','100','Random 100','Mixed sections',st('r100'))}
@@ -836,10 +837,10 @@ function renderQMenu(){
    </div>
    <div class="qgrp">Full quizzes · track your progress</div>
    <div class="qtiles">
-    ${T('sp_s0','#3ddc84',np,'Speed · 0 SP','Every Pokémon in the pool',st('sp_s0'))}
-    ${T('sp_s32','#3ddc84',np,'Speed · 32 SP','Every Pokémon in the pool',st('sp_s32'))}
-    ${T('sp_s32p','#3ddc84',np,'Speed · 32 SP +','Every Pokémon in the pool',st('sp_s32p'))}
-    ${T('sp_types','#ff9a4a',324,'Type chart','All 18×18 matchups, random',st('sp_types'))}
+    ${T('sp_s0','#ff4fa8',np,'Speed · 0 SP','Every Pokémon in the pool',st('sp_s0'),'wide')}
+    ${T('sp_s32','#ff4fa8',np,'Speed · 32 SP','Every Pokémon in the pool',st('sp_s32'),'wide')}
+    ${T('sp_s32p','#ff4fa8',np,'Speed · 32 SP +','Every Pokémon in the pool',st('sp_s32p'),'wide')}
+    ${T('sp_types','#ff9a4a',324,'Type chart','All 18×18 matchups, random',st('sp_types'),'wide')}
     ${T('sp_nat','#2fd0a0',25,'Natures','All 25 natures',st('sp_nat'),'wide')}
    </div>`;
 }
@@ -1054,3 +1055,20 @@ $('#pSrc').addEventListener('change',e=>{SRCK=e.target.value;applySrc();renderCa
 $('#pOff').addEventListener('change',e=>{OFFN=e.target.value;try{localStorage.setItem('vgcOff',OFFN)}catch(x){}buildOfficial();applySrc();renderCards()});
 applySrc();
 (function(){const go=()=>{showTab('home');window.scrollTo({top:0,behavior:'smooth'})};document.querySelectorAll('.dev .rotom,.dev h1').forEach(el=>{el.style.cursor='pointer';el.addEventListener('click',go)});const h=document.querySelector('.dev h1');if(h){h.setAttribute('role','link');h.setAttribute('tabindex','0');h.setAttribute('aria-label','Macar Dex, go to home');h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})}})();
+/* keep the bottom bar in place on iPhone (keyboard / viewport shifts) */
+(function(){
+  const tabs=document.getElementById('tabs'),vv=window.visualViewport;if(!tabs)return;
+  let raf=0;
+  const fix=()=>{raf=0;if(!vv){tabs.style.transform='';return}
+    const gap=window.innerHeight-(vv.height+vv.offsetTop);
+    const kb=window.innerHeight-vv.height>140&&document.activeElement&&/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+    tabs.classList.toggle('kbopen',!!kb);
+    tabs.style.transform=`translateX(-50%) translateY(${gap>1&&!kb?-Math.round(gap):0}px)`;};
+  const q=()=>{if(!raf)raf=requestAnimationFrame(fix)};
+  if(vv){vv.addEventListener('resize',q);vv.addEventListener('scroll',q)}
+  window.addEventListener('resize',q);window.addEventListener('orientationchange',()=>setTimeout(q,300));
+  document.addEventListener('focusin',q);
+  document.addEventListener('focusout',()=>setTimeout(()=>{window.scrollTo(window.scrollX,window.scrollY);q()},120));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(q,100)});
+  window.addEventListener('pageshow',q);q();
+})();
