@@ -306,6 +306,23 @@ function openCard(k,base){
 function closeCard(){$('#modal').classList.add('hide');LASTCARD=null}
 $('#modal').addEventListener('click',e=>{const fv=e.target.closest('.favstar');if(fv){toggleFav(fv.dataset.fav);fv.setAttribute('aria-pressed',FAV.has(fv.dataset.fav));fv.textContent=FAV.has(fv.dataset.fav)?'★':'☆';renderCards();return}const fq=e.target.closest('[data-fq]');if(fq){closeCard();startFocus(fq.dataset.fq);return}const f=e.target.closest('.ftabs button');if(f){openCard(f.dataset.f,f.dataset.b);return}const ab=e.target.closest('[data-ab]');if(ab){openAbility(ab.dataset.ab);return}const mc=e.target.closest('.mchip');if(mc){openMove(+mc.dataset.mv);return}const lr=e.target.closest('.lr');if(lr){openCard(lr.dataset.k);return}if(e.target.id==='modal'||e.target.id==='mClose')closeCard()});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCard()});
+/* Swipe left or right on any modal to close it (iPhone). Ignores sideways-scrollable tables, form fields and the import/export text boxes. */
+(()=>{
+  const M=$('#modal'),B=$('#modalBox'),RM=matchMedia('(prefers-reduced-motion: reduce)');let g=null;
+  const hScroll=el=>{for(;el&&el!==M;el=el.parentElement){if(el.scrollWidth>el.clientWidth+2&&/(auto|scroll)/.test(getComputedStyle(el).overflowX))return true}return false};
+  const reset=()=>{B.style.transition='';B.style.transform='';B.style.opacity=''};
+  M.addEventListener('touchstart',e=>{g=null;if(e.touches.length!==1||B.querySelector('textarea'))return;const t=e.target;if(t.closest('input,select,textarea,[contenteditable]')||hScroll(t))return;const p=e.touches[0];g={x:p.clientX,y:p.clientY,t:Date.now(),dx:0,h:null}},{passive:true});
+  M.addEventListener('touchmove',e=>{if(!g)return;const p=e.touches[0],dx=p.clientX-g.x,dy=p.clientY-g.y;
+    if(g.h===null){if(Math.abs(dx)<10&&Math.abs(dy)<10)return;g.h=Math.abs(dx)>Math.abs(dy)*1.3;if(!g.h){g=null;return}}
+    e.preventDefault();g.dx=dx;B.style.transition='none';B.style.transform=`translateX(${dx}px)`;B.style.opacity=String(Math.max(.35,1-Math.abs(dx)/(innerWidth*1.2)))},{passive:false});
+  const end=()=>{if(!g||!g.h){g=null;return}const dx=g.dx,v=Math.abs(dx)/Math.max(1,Date.now()-g.t);g=null;
+    if(Math.abs(dx)>Math.min(110,innerWidth*.28)||(v>.5&&Math.abs(dx)>40)){
+      if(RM.matches){closeCard();reset();return}
+      B.style.transition='transform .18s ease-out,opacity .18s ease-out';B.style.transform=`translateX(${dx>0?innerWidth:-innerWidth}px)`;B.style.opacity='0';
+      setTimeout(()=>{closeCard();reset()},180);
+    }else{B.style.transition='transform .2s ease,opacity .2s ease';B.style.transform='';B.style.opacity='';setTimeout(()=>{B.style.transition=''},200)}};
+  M.addEventListener('touchend',end);M.addEventListener('touchcancel',()=>{g=null;reset()});
+})();
 
 /* ---------- SPEED ---------- */
 $('#cMon').innerHTML=alpha.map(p=>`<option value="${p.k}">${p.n} (base ${p.s})</option>`).join('');
