@@ -12,7 +12,7 @@ Study app for Pokémon Champions VGC (Reg M-C, Level 50). Plain static site, no 
 | `app.js` | Home, Dex, Moves, Speed, Types, Abilities, Natures, Quiz, Top 30 | hand |
 | `calcui.js` | Damage calc UI, Items tab, Teams (import/build), weather & terrain guide | hand |
 | `smogcalc.js` | `@smogon/calc` 0.12.0 bundle (data + calc). Gen `0` = Champions. Lazy-loaded when the Calc tab opens | never by hand |
-| `data.js` | `window.DEX`: 343 forms (stats, types, abilities, sprites as base64) | rarely |
+| `data.js` | `window.DEX`: 343 forms (stats, types, abilities). Sprites are Showdown gen5 (`play.pokemonshowdown.com/sprites/gen5/` and `gen5-shiny/`, same as Macar Showdown), built from the name in `app.js` (`sprId`); only forms Showdown lacks keep a base64 sprite in `s` (no shiny for them). When Showdown adds one, drop its `s` | rarely |
 | `moves.js` | `window.MOVES` (510) + `window.LEARN` (learnsets) | rarely |
 | `es.js` | Spanish names and descriptions for abilities, moves, natures | rarely |
 | `items.js` | `window.ITEMS` (166 items, EN/ES desc, sprite, `u` users) + `window.CSETS` (ladder item/spread per form) | weekly (CSETS and `u` only) |
@@ -29,7 +29,7 @@ Keys everywhere: lowercase name without symbols (`Charizard-Mega-Y` → `chariza
 - Quiz: no repeated question inside a run; mistakes are only re-asked in **Review mistakes**, and only leave that list when answered right there. Daily = 20 questions, same for everyone each day: 6 speed, 8 Pokémon + type chart, 2 abilities, 2 moves, 1 item, 1 nature, shuffled. No Mega Stone item questions.
 - Home: Quiz tile is the wide one, at the bottom. Dock: Home, Dex, Speed, Calc, Quiz, More. More order: Teams, Type chart, Natures, Items, Abilities, Moves.
 - Mascot (header / intro) is original (device with eyes and simple feet). Do not turn it into Rotom or any real character.
-- localStorage keys (user data, keep compatible): `vgcTeams`, `vgcTeamA`, `vgcCalc`, `vgcHist`, `vgcQuiz2`, `vgcMissed` (last 300), `vgcDaily`, `vgcDesc`.
+- localStorage keys (user data, keep compatible): `vgcTeams`, `vgcTeamA`, `vgcCalc`, `vgcHist`, `vgcQuiz2`, `vgcMissed` (last 300), `vgcDaily`, `vgcDesc`, `vgcShiny` (Dex Sprites filter).
 - Mobile first (iPhone, installed from Safari). Check 390 px wide and desktop. Bottom bar uses safe-area insets and a visualViewport fix in `app.js`.
 - Official usage: the Events picker (Dex when Source = Official, and Top 30) mixes any regulations/events from `EVENTS`. It always starts on the latest event and the choice is not saved. `EVENTS` keeps every official Champions event of every regulation (Reg M-A onwards); never drop old ones.
 - Embed version for Macar Showdown: the same files with `?embed=1` (or `embed.html`). Only Dex, Items, Abilities, Moves, Type chart, Natures; no header, quizzes, Speed, Calc or Teams links. Anything new must also look right there. The weekly data update covers both because they share the files.

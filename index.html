@@ -1145,6 +1145,12 @@ body.introing{overflow:hidden}
 html.embed #intro,html.embed header.dev,html.embed [data-quiz],html.embed .qlink,html.embed [data-fq],html.embed [data-calc],html.embed #t30Quiz,html.embed [data-goteams],html.embed #tSub{display:none!important}
 html.embed .dockbar > [data-tab="home"],html.embed .dockbar > [data-tab="speed"],html.embed .dockbar > [data-tab="calc"],html.embed .dockbar > [data-tab="quiz"],html.embed .dockbar > [data-more]{display:none!important}
 html.embed .wrap{padding-top:8px}
+/* Showdown gen5 sprites: keep the pixels sharp */
+img[src^="https://play.pokemonshowdown.com/sprites/"]{image-rendering:pixelated}
+.shrow{display:flex;gap:12px}
+.shrow figure{margin:0;flex:1;background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.shrow img{width:120px;height:120px;max-width:100%}
+.shrow figcaption{font-size:12px;color:var(--muted);font-weight:600}
 /* Official events picker */
 .evp{position:relative;width:100%}
 .evbtn{width:100%;display:flex;align-items:center;gap:8px;text-align:left;flex-wrap:wrap}
@@ -1228,7 +1234,7 @@ var t=setTimeout(open,2500);i.addEventListener('click',function(){clearTimeout(t
     <div class="fpanel hide" id="fPanel">
       <div class="field"><label for="pT">Type</label><select id="pT"></select></div>
       <div class="field"><label for="pA">Ability</label><select id="pA"><option value="">Any ability</option></select></div>
-      <div class="field"><label for="pV">Min speed</label><input type="number" id="pV" min="0" max="500" placeholder="e.g. 150" inputmode="numeric"></div>
+      <div class="field"><label for="pSh">Sprites</label><select id="pSh"><option value="">Normal</option><option value="1">✦ Shiny</option></select></div>
       <div class="field"><label for="pU">Usage tier</label><select id="pU"><option value="">All Pokémon</option><option value="a">S–A tier (10%+)</option><option value="c">S–C tier (2%+)</option><option value="m">Meta (0.3%+)</option><option value="d">D tier (0.1–2%)</option><option value="n">Unused (under 0.1%)</option></select></div>
       <div class="field"><label for="pM">Mega</label><select id="pM"><option value="">Any</option><option value="y">Has a Mega</option><option value="n">No Mega</option><option value="o">Only Mega forms</option></select></div>
     </div>

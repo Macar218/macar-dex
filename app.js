@@ -25,7 +25,14 @@ Fairy:{h:['Fighting','Dragon','Dark'],l:['Fire','Poison','Steel'],z:[]}
 function eff(att,def){const c=CH[att];if(c.z.includes(def))return 0;if(c.h.includes(def))return 2;if(c.l.includes(def))return .5;return 1}
 function effVs(att,defs){return defs.reduce((m,d)=>m*eff(att,d),1)}
 
-const P=window.DEX.map(d=>({k:d.k,n:d.n,t:d.t,b:d.b,s:d.b[5],ah:d.a,a:d.a.map(x=>x[0]),m:d.m||0,i:d.i||'',img:d.s}));
+/* Sprites: the same Showdown gen5 sprites as Macar Showdown. Forms Showdown does not have yet keep their own sprite in data.js (and have no shiny). */
+const SPR='https://play.pokemonshowdown.com/sprites/gen5/',SPRS='https://play.pokemonshowdown.com/sprites/gen5-shiny/';
+const SPR_NOH=new Set(['kommoo','hakamoo','jangmoo','hooh','porygonz','mrmime','mimejr','typenull','mrrime','nidoranf','nidoranm']);
+const sprId=n=>{const f=n.toLowerCase().replace(/[^a-z0-9]+/g,'');if(SPR_NOH.has(f))return f;const i=n.indexOf('-');return i<0?f:n.slice(0,i).toLowerCase().replace(/[^a-z0-9]+/g,'')+'-'+n.slice(i+1).toLowerCase().replace(/[^a-z0-9]+/g,'')};
+const P=window.DEX.map(d=>({k:d.k,n:d.n,t:d.t,b:d.b,s:d.b[5],ah:d.a,a:d.a.map(x=>x[0]),m:d.m||0,i:d.i||'',img:d.s||SPR+sprId(d.n)+'.png',shiny:d.s?'':SPRS+sprId(d.n)+'.png'}));
+let SHINY=false;try{SHINY=localStorage.getItem('vgcShiny')==='1'}catch(e){}
+const cardImg=p=>SHINY&&p.shiny?p.shiny:p.img;
+const shinyBlock=p=>`<h3 class="h" style="margin-top:18px">Shiny</h3>${p.shiny?`<div class="shrow"><figure><img src="${p.img}" alt="${esc(p.n)}" loading="lazy"><figcaption>Normal</figcaption></figure><figure><img src="${p.shiny}" alt="Shiny ${esc(p.n)}" loading="lazy"><figcaption>✦ Shiny</figcaption></figure></div>`:'<p class="note">No shiny sprite for this form on Showdown yet.</p>'}`;
 
 // Ability categories (descriptions come from Showdown, in English)
 const CATMAP={
@@ -236,7 +243,7 @@ function pkCard(p){
   const v=[0,1,2,3,4,5].map(i=>i===5?spdBase(p):stat50(p,i,SPON?32:0,1)),L=MEGAS[p.k]?[p,...MEGAS[p.k]]:null;
   return `<div class="pk" role="button" tabindex="0" data-k="${p.k}" style="${typeCol(p)}">${L||p.m?`<img class="mstone" src="${MEGAIMG}" alt="Mega" title="Has Mega Evolution">`:''}<span class="face"><span class="in">
     <span class="top"><b${p.n.length>8?` style="font-size:${p.n.length>13?9:p.n.length>11?10:p.n.length>9?11:12}px"`:''}>${esc(p.n)}</b>${chipHTML(p)}</span>
-    <span class="art"><span class="fav" data-fav="${p.k}" role="button" aria-label="Favourite: ${esc(p.n)}" aria-pressed="${FAV.has(p.k)}">★</span><img src="${p.img}" alt="" loading="lazy" decoding="async"></span>
+    <span class="art"><span class="fav" data-fav="${p.k}" role="button" aria-label="Favourite: ${esc(p.n)}" aria-pressed="${FAV.has(p.k)}">★</span><img src="${cardImg(p)}" alt="" loading="lazy" decoding="async"></span>
     <span class="tps">${tpills(p.t)}</span>
     <span class="sts">${[0,1,2,3,4,5].map(i=>`<span class="${i===5?'sp':''}"><em style="color:${STATCOL[i]}">${STATS[i]}</em><b>${v[i]}</b></span>`).join('')}</span>
     <span class="abl1">${abOrder(p)}</span>
@@ -247,7 +254,7 @@ function usOk(p,f){
   return f==='a'?t>=10:f==='c'?t>=2:f==='m'?t>=0.3:f==='d'?(t>=0.1&&t<2):f==='n'?t<0.1:true;
 }
 function renderCards(){
-  const q=$('#pQ').value.trim().toLowerCase(),ty=$('#pT').value,s=$('#pS').value,ab=$('#pA').value,mv=parseInt($('#pV').value,10),mg=$('#pM').value,fv=$('#pF').checked;
+  const q=$('#pQ').value.trim().toLowerCase(),ty=$('#pT').value,s=$('#pS').value,ab=$('#pA').value,mv=NaN,mg=$('#pM').value,fv=$('#pF').checked;
   const tierSel=$('#pU').value,hideLow=s==='use'&&tierSel!=='n';
   const SRCL=mg==='o'?Object.values(MEGAS).flat():BASES;
   let rows=SRCL.filter(p=>(!q||p.n.toLowerCase().includes(q)||p.a.some(a=>a.toLowerCase().includes(q))||(MEGAS[p.k]||[]).some(m=>m.n.toLowerCase().includes(q)))
@@ -265,7 +272,7 @@ function renderCards(){
    const fo=$('#fOff');if(fo)fo.style.display=(uAct&&SRCK==='official')?'':'none';
    const dn=$('#dexNote');if(dn)dn.textContent=CHIP==='use'?'Pill = usage in the selected source: S ≥20% · A ≥10% · B ≥5% · C ≥2% · D ≥0.1%. ★ = favourite.':CHIP?'Pill = the stat you sort by. Megas show the same stat at the bottom. ★ = favourite.':'★ = favourite.'}
   $('#pCount').textContent=rows.length+' results';
-  {const n=['pT','pA','pV','pU','pM'].filter(id=>$('#'+id).value!=='').length,bd=$('#fBadge');bd.textContent=n;bd.classList.toggle('hide',!n)}
+  {const n=['pT','pA','pU','pM'].filter(id=>$('#'+id).value!=='').length+(SHINY?1:0),bd=$('#fBadge');bd.textContent=n;bd.classList.toggle('hide',!n)}
   $('#cards').innerHTML=rows.map(pkCard).join('')||'<p class="note">No Pokémon match these filters.</p>';normAll();
 }
 
@@ -293,7 +300,7 @@ $('#fToggle').addEventListener('click',()=>{const o=$('#fPanel').classList.toggl
 let STON=true;try{STON=localStorage.getItem('vgcSt')!=='0'}catch(e){}
 $('#pSt').checked=STON;$('#cards').classList.toggle('nostats',!STON);
 $('#pSt').addEventListener('change',e=>{STON=e.target.checked;try{localStorage.setItem('vgcSt',STON?'1':'0')}catch(x){}$('#cards').classList.toggle('nostats',!STON)});
-$('#pQ').addEventListener('input',deb(renderCards));$('#pV').addEventListener('input',deb(renderCards));['pT','pS','pA','pM','pF','pU'].forEach(id=>$('#'+id).addEventListener('input',renderCards));
+$('#pQ').addEventListener('input',deb(renderCards));$('#pSh').value=SHINY?'1':'';$('#pSh').addEventListener('change',e=>{SHINY=e.target.value==='1';try{localStorage.setItem('vgcShiny',SHINY?'1':'0')}catch(x){}renderCards()});['pT','pS','pA','pM','pF','pU'].forEach(id=>$('#'+id).addEventListener('input',renderCards));
 $('#modalBox').addEventListener('click',e=>{const t=e.target.closest('[data-tm]');if(t){openCard(t.dataset.tm);const m=$('#modalBox');m.scrollTop=0}});
 $('#cards').addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.classList&&e.target.classList.contains('pk')){e.preventDefault();openCard(e.target.dataset.k)}});
 $('#cards').addEventListener('click',e=>{
@@ -343,7 +350,7 @@ function openCard(k,base){
    <h3 class="h" style="margin-top:18px">Speed</h3>
    <div class="speedstrip">${[[SPON?'32 SP +':'Speed',spdBase(p)],[SPON?'32 SP + Scarf':'+ Scarf',spdScarf(p)],[SPON?'32 SP + Tailwind':'+ Tailwind',spdTW(p)]].map(([l,v])=>`<div><small>${l}</small><b>${v}</b></div>`).join('')}</div>
    ${matchupsBlock(p)}
-   <h3 class="h" style="margin-top:18px">Abilities</h3>${abs}${setsBlock(p,base)}${movesBlock(base)}</div>`;
+   <h3 class="h" style="margin-top:18px">Abilities</h3>${abs}${setsBlock(p,base)}${movesBlock(base)}${shinyBlock(p)}</div>`;
   $('#modal').classList.remove('hide');
   $('#mClose').focus();
 }
