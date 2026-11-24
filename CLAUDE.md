@@ -31,6 +31,8 @@ Keys everywhere: lowercase name without symbols (`Charizard-Mega-Y` → `chariza
 - Mascot (header / intro) is original (device with eyes and simple feet). Do not turn it into Rotom or any real character.
 - localStorage keys (user data, keep compatible): `vgcTeams`, `vgcTeamA`, `vgcCalc`, `vgcHist`, `vgcQuiz2`, `vgcMissed` (last 300), `vgcDaily`, `vgcDesc`.
 - Mobile first (iPhone, installed from Safari). Check 390 px wide and desktop. Bottom bar uses safe-area insets and a visualViewport fix in `app.js`.
+- Official usage: the Events picker (Dex when Source = Official, and Top 30) mixes any regulations/events from `EVENTS`. It always starts on the latest event and the choice is not saved. `EVENTS` keeps every official Champions event of every regulation (Reg M-A onwards); never drop old ones.
+- Embed version for Macar Showdown: the same files with `?embed=1` (or `embed.html`). Only Dex, Items, Abilities, Moves, Type chart, Natures; no header, quizzes, Speed, Calc or Teams links. Anything new must also look right there. The weekly data update covers both because they share the files.
 
 ## Weekly data update
 A Claude Code desktop scheduled task (`macar-dex-weekly-update`, title `Macar Dex: actualizar uso (cada lunes)`) runs every Monday ~08:47–09:00 Europe/Madrid from `C:\Users\Usuario\Git\macar-dex`, only while the Claude app is open. It updates `meta.js`, and on a new Smogon month `sets.js` and `CSETS`/`u` in `items.js`, then commits `Weekly data update YYYY-MM-DD` to `main`. It never touches code files. Full procedure: `docs/weekly-update.md`.

@@ -2,6 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>/* Embed version for Macar Showdown: ?embed=1 shows only Dex, Items, Abilities, Moves, Type chart and Natures. */
+(function(){try{if(/[?&]embed(=1|&|$)/.test(location.search)){window.EMBED=true;document.documentElement.classList.add("embed")}}catch(e){}})();</script>
 <meta name="theme-color" content="#2a6af0">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Macar Dex</title>
@@ -1139,6 +1141,31 @@ body.introing{overflow:hidden}
 .rotom .rfoot.l{left:19%}.rotom .rfoot.r{right:19%}
 #intro .rotom .rfoot{width:17%;height:14%;bottom:-13%;border-width:calc(var(--w,60px)*.018)}#intro .rotom .rfoot.l{left:22%}#intro .rotom .rfoot.r{right:22%}
 .dev .rotom{margin-bottom:6px}
+/* Embed version (?embed=1) */
+html.embed #intro,html.embed header.dev,html.embed [data-quiz],html.embed .qlink,html.embed [data-fq],html.embed [data-calc],html.embed #t30Quiz,html.embed [data-goteams],html.embed #tSub{display:none!important}
+html.embed .dockbar > [data-tab="home"],html.embed .dockbar > [data-tab="speed"],html.embed .dockbar > [data-tab="calc"],html.embed .dockbar > [data-tab="quiz"],html.embed .dockbar > [data-more]{display:none!important}
+html.embed .wrap{padding-top:8px}
+/* Official events picker */
+.evp{position:relative;width:100%}
+.evbtn{width:100%;display:flex;align-items:center;gap:8px;text-align:left;flex-wrap:wrap}
+.evbtn b{font-family:var(--display);font-size:15px}
+.evbtn small{color:var(--muted);margin-left:auto}
+.evpanel{margin-top:8px;background:var(--shell);border:1px solid var(--line);border-radius:14px;padding:10px;max-height:60vh;overflow-y:auto}
+.evq{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.evq .btn{padding:5px 10px;font-size:13px}
+.evq .btn[aria-pressed=true]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.evreg{border-top:1px solid var(--line);padding:6px 0}
+.evp .evrh{display:flex!important;align-items:center;gap:8px;margin:2px 0 4px;font-size:14px}
+.evrh small{color:var(--muted)}
+.evr{display:flex;align-items:center;gap:8px;padding:3px 0 3px 18px}
+.evp label{text-transform:none!important;letter-spacing:normal!important;color:var(--ink)!important;font-size:14px!important;margin:0!important}
+.evp .evr label{flex:1;display:grid!important;grid-template-columns:auto 1fr;column-gap:8px;align-items:center;margin:0;font-weight:500;cursor:pointer}
+.evr label small{grid-column:2;color:var(--muted);font-size:12px;font-weight:400}
+.evr input,.evrh input{accent-color:var(--accent);width:18px;height:18px}
+.evonly{font:inherit;font-size:12px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:3px 8px;cursor:pointer}
+.evonly:hover{color:var(--ink)}
+.evf{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--line);padding-top:8px;position:sticky;bottom:-10px;background:var(--shell)}
+#t30 .evp{margin:8px 0 12px}
 </style>
 </head>
 <body>
@@ -1149,6 +1176,7 @@ body.introing{overflow:hidden}
 <div id="intro" aria-hidden="true"><div class="rotom" aria-hidden="true"><svg class="rsp" viewBox="0 0 100 130" aria-hidden="true"><path d="M50 5C57 42 88 80 96 124H4C12 80 43 42 50 5Z" fill="#3b86ff" stroke="#0a2a7a" stroke-width="8" stroke-linejoin="round"/></svg><svg class="rft l" viewBox="0 0 100 70" aria-hidden="true"><path d="M8 62C4 30 22 8 52 8s44 22 40 54Z" fill="#3b86ff" stroke="#0a2a7a" stroke-width="8" stroke-linejoin="round"/></svg><svg class="rft r" viewBox="0 0 100 70" aria-hidden="true"><path d="M8 62C4 30 22 8 52 8s44 22 40 54Z" fill="#3b86ff" stroke="#0a2a7a" stroke-width="8" stroke-linejoin="round"/></svg><i class="rfoot l"></i><i class="rfoot r"></i><div class="rbody"><div class="rs"><i class="sl"></i><i class="sl s2"></i><i class="sl s3"></i></div></div><div class="re"><svg class="eyes" viewBox="-470 -280 940 560" aria-hidden="true"><g transform="translate(-262 0) rotate(-19)"><ellipse rx="192" ry="282" fill="#0a1f5c"/><ellipse rx="160" ry="250" fill="#0a98d6"/><ellipse rx="148" ry="238" fill="#fff"/><ellipse rx="59" ry="155" fill="#0a98d6"/><path d="M-149 0H149" stroke="#0a98d6" stroke-width="11"/></g><g transform="translate(262 0) rotate(19)"><ellipse rx="192" ry="282" fill="#0a1f5c"/><ellipse rx="160" ry="250" fill="#0a98d6"/><ellipse rx="148" ry="238" fill="#fff"/><ellipse rx="59" ry="155" fill="#0a98d6"/><path d="M-149 0H149" stroke="#0a98d6" stroke-width="11"/></g></svg></div></div><div class="word">Macar <span>Dex</span></div><div class="sub2">VGC · Champions · Reg M-C</div>
 </div>
 <script>(function(){var i=document.getElementById('intro');if(!i)return;
+if(window.EMBED){i.className='out';return}
 try{if(sessionStorage.getItem('macarIntro')){i.className='out';return}sessionStorage.setItem('macarIntro','1')}catch(e){}
 if(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches){i.className='out';return}
 document.body.classList.add('introing');
@@ -1191,6 +1219,7 @@ var t=setTimeout(open,2500);i.addEventListener('click',function(){clearTimeout(t
     <div class="trow two"><div class="field"><label for="pS">Sort by</label>
       <select id="pS"><option value="spe">Speed (fastest first)</option><option value="use" selected>Usage</option><option value="n">Name</option><option value="bst">Base stat total</option><option value="atk">Attack</option><option value="spa">Sp. Attack</option><option value="bulk">Bulk (HP·Def·SpD)</option></select></div>
       <div class="field"><label for="pSrc">Source</label><select id="pSrc"><option value="showdown">Showdown</option><option value="official">Official</option><option value="online">Online (30 d)</option></select></div></div>
+    <div class="trow evrow" id="fOff" style="display:none"><div class="evp" data-evp="dex"></div></div>
     <div class="trow view">
       <label class="field spf"><span>Stats</span><select id="pSP" class="spsel-s"><option value="0">No SP</option><option value="1">32 SP</option></select></label>
       <label class="chk"><input type="checkbox" id="pSt" checked> Show stats</label>
@@ -1202,7 +1231,6 @@ var t=setTimeout(open,2500);i.addEventListener('click',function(){clearTimeout(t
       <div class="field"><label for="pV">Min speed</label><input type="number" id="pV" min="0" max="500" placeholder="e.g. 150" inputmode="numeric"></div>
       <div class="field"><label for="pU">Usage tier</label><select id="pU"><option value="">All Pokémon</option><option value="a">S–A tier (10%+)</option><option value="c">S–C tier (2%+)</option><option value="m">Meta (0.3%+)</option><option value="d">D tier (0.1–2%)</option><option value="n">Unused (under 0.1%)</option></select></div>
       <div class="field"><label for="pM">Mega</label><select id="pM"><option value="">Any</option><option value="y">Has a Mega</option><option value="n">No Mega</option><option value="o">Only Mega forms</option></select></div>
-      <div class="field" id="fOff"><label for="pOff">Events used</label><select id="pOff"><option value="1">Last 1</option><option value="2">Last 2</option><option value="3">Last 3</option><option value="5">Last 5</option><option value="all">All this regulation</option></select></div>
     </div>
     <div class="trow cnt"><div class="note" id="pCount" style="margin:0"></div><button class="btn qlink" data-quiz="pokemon">Quiz: Pokémon</button></div>
   </div>

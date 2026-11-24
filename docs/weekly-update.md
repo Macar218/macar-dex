@@ -40,11 +40,11 @@ Hasta el 18 nov 2026 el artefacto era la fuente de verdad. Desde que Arturo edit
 ## Fuentes
 1. **showdown** — Smogon, solo Reg M-C ladder (NO Bo3), 1760+, mes más reciente. Último mes cargado: oct 2026.
 2. **online** — MunchStats Limitless, últimos 30 días, `https://www.munchstats.com/limitless/M-C/25/`. Guardar filas ≥0,1 %.
-3. **official (EVENTS)** — MunchStats, necesita navegador. `https://www.munchstats.com/tournaments/`, API `fetch('/tournaments/api/<id>/all/')`. Añadir eventos nuevos de `gen9championsvgc2026reg…`. La app combina los últimos N Regionales de CURREG ponderando por equipos.
+3. **official (EVENTS)** — MunchStats, necesita navegador. `https://www.munchstats.com/tournaments/`, API `fetch('/tournaments/api/<id>/all/')`. Añadir eventos nuevos de cualquier regulación de Champions (`gen9championsvgc…`; no los de Escarlata/Púrpura `gen9vgc…`), de cualquier tipo (Regional, Special, International, Worlds). Las regulaciones nuevas se añaden solas (campo `reg`, p. ej. `regmd`). En la app, el selector Events usa por defecto el último evento y deja mezclar cualquier regulación y evento, ponderando por equipos.
 4. Descartado: ranked in-game y Bo3 de Showdown.
 
 ## Cambio de regulación
-Actualizar CURREG, conservar eventos de la regulación actual y los de la anterior de los últimos 30 días; cambiar la URL de Smogon al nuevo formato.
+Actualizar CURREG y cambiar la URL de Smogon al nuevo formato. **No borrar nunca eventos antiguos**: EVENTS guarda todos los oficiales de todas las regulaciones (unos 1,5 KB por evento).
 
 ## Pasos de cada ejecución
 1. Leer showdown y online; eventos oficiales nuevos.

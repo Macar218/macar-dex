@@ -111,16 +111,47 @@ const spdTW=p=>spdBase(p)*2;
 const SRC=window.SRC||{},USAGES=window.USAGES||{};
 let SRCK='showdown';
 const EVENTS=window.EVENTS||[],CURREG=window.CURREG||'';
-const OFFTYPES=['Regional','International','Worlds'];let OFFN='3';try{const s=localStorage.getItem('vgcOff');if(s)OFFN=s}catch(e){}
+/* Official events picker: any mix of regulations and events. Default = the latest event played (follows new events automatically). */
+const EVS=[...EVENTS].sort((x,y)=>y.date.localeCompare(x.date)||y.teams-x.teams);
+const REGS=[...new Set(EVS.map(e=>e.reg))];
+const regLbl=r=>'Reg '+r.replace(/^reg/,'').toUpperCase().replace(/^(.)(.)$/,'$1-$2');
+const evShort=e=>e.name.replace(/^\d{4} /,'').replace(/ (Regional|International|Special|Championships?)+$/,'').replace(/^World$/,'Worlds');
+let OFFSEL=null; /* not saved: Official always starts from the latest event */
+const offUse=()=>OFFSEL?EVS.filter(e=>OFFSEL.includes(e.id)):EVS.slice(0,1);
+function setOffSel(ids){OFFSEL=ids&&ids.length?ids:null}
 function buildOfficial(){
-  const evs=EVENTS.filter(e=>e.reg===CURREG&&OFFTYPES.includes(e.type)).sort((x,y)=>y.date.localeCompare(x.date));
-  const use=OFFN==='all'?evs:evs.slice(0,+OFFN||3);
+  const use=offUse();
   const tot=use.reduce((s,e)=>s+e.teams,0),u={};
   use.forEach(e=>{for(const k in e.u)u[k]=(u[k]||0)+e.u[k]*e.teams});
   for(const k in u)u[k]=Math.round(u[k]/tot*10)/10;
   USAGES.official=u;
-  const o=SRC.official;if(o&&use.length){o.n=Object.keys(u).length;o.date=use[use.length-1].date+' to '+use[0].date;o.sample=use.length+' official events ('+use.map(e=>e.name.replace(/^\d{4} /,'').replace(' Regional','')).join(', ')+'), '+tot.toLocaleString('en')+' teams'}
+  const o=SRC.official;if(o&&use.length){o.label='Official events';o.n=Object.keys(u).length;o.date=use.length>1?use[use.length-1].date+' to '+use[0].date:use[0].date;o.sample=(use.length>1?use.length+' official events (':'')+use.map(e=>evShort(e)+' · '+regLbl(e.reg).slice(4)).join(', ')+(use.length>1?')':'')+', '+tot.toLocaleString('en')+' teams'+(OFFSEL?'':' · latest event')}
 }
+function evPickHTML(where){
+  const use=offUse(),ids=new Set(use.map(e=>e.id)),tot=use.reduce((s,e)=>s+e.teams,0);
+  const sum=OFFSEL?(use.length===1?evShort(use[0]):use.length+' events'):'Latest · '+(use[0]?evShort(use[0]):'none');
+  const rows=REGS.map(r=>{const L=EVS.filter(e=>e.reg===r),on=L.filter(e=>ids.has(e.id)).length;
+    return `<div class="evreg"><label class="evrh"><input type="checkbox" data-evreg="${r}"${on===L.length?' checked':''}${on&&on<L.length?' data-mixed="1"':''}> <b>${regLbl(r)}</b> <small>${L.length} event${L.length>1?'s':''}</small></label>
+     ${L.map(e=>`<div class="evr"><label><input type="checkbox" data-ev="${e.id}"${ids.has(e.id)?' checked':''}> <span>${esc(evShort(e))}</span><small>${e.type} · ${e.date} · ${e.teams.toLocaleString('en')} teams</small></label><button type="button" class="evonly" data-evonly="${e.id}">Only</button></div>`).join('')}</div>`}).join('');
+  return `<button type="button" class="btn evbtn" data-evtog="${where}" aria-expanded="false"><span class="note">Events</span> <b>${esc(sum)}</b> <small>${tot.toLocaleString('en')} teams</small> ▾</button>
+   <div class="evpanel hide" data-evpanel="${where}"><div class="evq"><button type="button" class="btn" data-evq="latest"${OFFSEL?'':' aria-pressed="true"'}>Latest event</button>${REGS.map(r=>`<button type="button" class="btn" data-evq="reg:${r}">All ${regLbl(r).slice(4)}</button>`).join('')}<button type="button" class="btn" data-evq="all">All</button></div>${rows}
+   <div class="evf"><span class="note">${use.length} event${use.length>1?'s':''} · ${tot.toLocaleString('en')} teams</span><button type="button" class="btn primary" data-evdone>Done</button></div></div>`;
+}
+function renderEvPick(){document.querySelectorAll('[data-evp]').forEach(el=>{const open=!!el.querySelector('.evpanel:not(.hide)');el.innerHTML=evPickHTML(el.dataset.evp);if(open){el.querySelector('.evpanel').classList.remove('hide');el.querySelector('.evbtn').setAttribute('aria-expanded','true')}el.querySelectorAll('[data-mixed]').forEach(c=>c.indeterminate=true)})}
+function evChanged(){buildOfficial();if(typeof applySrc==='function')applySrc();renderEvPick();if(typeof renderCards==='function')renderCards();if(typeof T30ON!=='undefined'&&T30ON)renderT30()}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-evtog]');if(t){const p=t.parentElement.querySelector('.evpanel');p.classList.toggle('hide');t.setAttribute('aria-expanded',!p.classList.contains('hide'));return}
+  if(e.target.closest('[data-evdone]')){const p=e.target.closest('.evpanel');p.classList.add('hide');p.parentElement.querySelector('.evbtn').setAttribute('aria-expanded','false');return}
+  const o=e.target.closest('[data-evonly]');if(o){setOffSel([o.dataset.evonly]);evChanged();return}
+  const q=e.target.closest('[data-evq]');if(q){const v=q.dataset.evq;setOffSel(v==='latest'?null:v==='all'?EVS.map(x=>x.id):EVS.filter(x=>x.reg===v.slice(4)).map(x=>x.id));evChanged()}
+});
+document.addEventListener('change',e=>{
+  const c=e.target.closest('[data-ev],[data-evreg]');if(!c)return;
+  const cur=new Set(offUse().map(x=>x.id));
+  if(c.dataset.ev){c.checked?cur.add(c.dataset.ev):cur.delete(c.dataset.ev)}else{EVS.filter(x=>x.reg===c.dataset.evreg).forEach(x=>c.checked?cur.add(x.id):cur.delete(x.id))}
+  if(!cur.size){renderEvPick();return}
+  setOffSel(EVS.filter(x=>cur.has(x.id)).map(x=>x.id));evChanged();
+});
 buildOfficial();
 let U=USAGES[SRCK]||{};
 const srcTxt=()=>{const s=SRC[SRCK]||{};return (s.label||'')+' · '+(s.date||'')};
@@ -139,7 +170,9 @@ const bg=p=>'var(--surface)';
 const formOk=(p,m)=>m==='all'||(m==='meta'?inMeta(p):0)||(m==='fav'?FAV.has(p.m?(BKEY[p.k]||p.k.replace(/mega[xyz]?$/,'')):p.k):(m==='mega')===!!p.m);
 
 /* ---------- TABS ---------- */
+const EMBEDT=['dex','items','abilities','moves','types','natures'];
 function showTab(id){
+  if(window.EMBED&&!EMBEDT.includes(id))id='dex';
   {const f=document.querySelector('.dev .rotom');if(f){f.classList.remove('hi');void f.offsetWidth;f.classList.add('hi')}}
   $$('#tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===id));
   const more=$('#tabs [data-more]');more.setAttribute('aria-selected',['types','abilities','natures','moves','items','teams'].includes(id));
@@ -157,6 +190,8 @@ $('#tabs').addEventListener('click',e=>{
   showTab(b.dataset.tab);
 });
 document.addEventListener('click',e=>{if(!e.target.closest('#tabs'))$('#moreSheet').classList.add('hide')});
+/* Embed: put Items, Abilities, Moves, Type chart and Natures straight in the bottom bar next to Dex */
+if(window.EMBED){const bar=$('#tabs .dockbar');['items','abilities','moves','types','natures'].forEach(t=>{const s=$('#moreSheet [data-tab="'+t+'"]');if(!s)return;const b=document.createElement('button');b.setAttribute('role','tab');b.dataset.tab=t;b.setAttribute('aria-selected','false');const svg=s.querySelector('svg');if(svg)b.appendChild(svg.cloneNode(true));const sp=document.createElement('span');sp.textContent=t==='types'?'Types':s.textContent.trim();b.appendChild(sp);bar.insertBefore(b,$('#tabs [data-more]'))})}
 $('#subline').textContent=`${P.length} forms (${P.filter(p=>!p.m).length} Pokémon and ${P.filter(p=>p.m).length} Megas) · Pokémon Champions, Level 50 · data from Pokémon Showdown.`;
 
 /* ---------- DEX ---------- */
@@ -693,7 +728,7 @@ G.speed=[
    const ok=va===vb?2:va>vb?0:1;
    return{prompt:'Who moves first?',opts:[opt(`<b>${esc(a.n)}</b><small>${SCEN[sa].l}</small>`,ok===0,a.k),opt(`<b>${esc(b.n)}</b><small>${SCEN[sb].l}</small>`,ok===1,b.k),opt('<b>Tie</b><small>same Speed</small>',ok===2)],keepOrder:1,explain:`${esc(a.n)} ${va} · ${esc(b.n)} ${vb}.`}},
  p0=>{const a=p0||rnd(POOL),s=rnd(['0-','0=','32=','32+','scarf']);
-   return{type:'num',prompt:`What is ${esc(a.n)}'s Speed at ${SCEN[s].l}?`,ik:a.k,answer:SCEN[s].f(a.s),hint:'⌊(base + 20 + SP) × nature⌋, then Scarf ×1.5',explain:`Base ${a.s}.`}},
+   return{type:'num',prompt:`What is ${esc(a.n)}'s Speed at ${SCEN[s].l}?`,ik:a.k,answer:SCEN[s].f(a.s),hint:'',explain:`Base ${a.s}.`}},
  ()=>{let a,b,ma,mb,va,vb,t=0;const tr=Math.random()<.25;
    do{a=rnd(POOL);b=rnd(POOL);ma=rnd(MODS);mb=rnd([...MODS,null]);va=ma.f(SCEN['32+'].f(a.s));vb=mb?mb.f(SCEN['32+'].f(b.s)):SCEN['32+'].f(b.s);t++}while((a===b||Math.abs(va-vb)>35||va===vb||ma===mb)&&t<1500);
    const ok=tr?(va<vb?0:1):(va>vb?0:1);
@@ -812,7 +847,7 @@ function natureQ(n){
        if(!eu)$('#nNeu').classList.add('right');else if(sel.z)$('#nNeu').classList.add('wrong');
        finishQ(ok,`${n[0]} (${ESN('n',n[0])}): ${natFx(n)}.`)})}};
 }
-const SPECNAME={sp_s0:'Speed · 0 SP',sp_s32:'Speed · 32 SP',sp_s32p:'Speed · 32 SP +',sp_types:'Type chart · 324',sp_nat:'Natures · 25'};
+const SPECNAME={sp_s0:'Speed · 0 SP',sp_s32:'Speed · 32 SP',sp_s32p:'Speed · 32 SP +',sp_tatk:'Type chart · Attack · 324',sp_tdef:'Type chart · Defence · 324',sp_nat:'Natures · 25'};
 const SPECM=Object.keys(SPECNAME),FIXEDM=['review','daily','focus','top30',...SPECM];
 const SECM=['inf','r20','r50','r100','time'],TRACKM=['daily','r20','r50','r100','top30',...SPECM],POOLM=['inf','r20','r50','r100','time','sp_s0','sp_s32','sp_s32p'];
 const RANDN={r20:20,r50:50,r100:100};
@@ -836,7 +871,7 @@ function startRun(mode,k){
   if(mode==='daily'){r.queue=dailyQs();r.total=DAILY_N}
   if(mode==='focus'){r.queue=focusQs(k);r.total=8}
   if(SPF[mode]){r.queue=shuffle(POOL).map(p=>speedNumQ(p,mode));r.total=r.queue.length}
-  if(mode==='sp_types'){r.queue=shuffle(TYPES.flatMap(a=>TYPES.map(d=>typeQ(a,d,Math.random()<.5))));r.total=r.queue.length}
+  if(mode==='sp_tatk'||mode==='sp_tdef'){const atk=mode==='sp_tatk';r.queue=shuffle(TYPES.flatMap(a=>TYPES.map(d=>typeQ(a,d,atk))));r.total=r.queue.length}
   if(mode==='sp_nat'){r.queue=shuffle(NATS).map(natureQ);r.total=r.queue.length}
   if(mode==='top30'){r.queue=top30Qs();r.total=r.queue.length}
   QZ.run=r;renderQuizUI();
@@ -876,7 +911,8 @@ function renderQMenu(){
     ${T('sp_s0','#ff4fa8',np,'Speed · 0 SP','Every Pokémon in the pool',st('sp_s0'),'wide')}
     ${T('sp_s32','#ff4fa8',np,'Speed · 32 SP','Every Pokémon in the pool',st('sp_s32'),'wide')}
     ${T('sp_s32p','#ff4fa8',np,'Speed · 32 SP +','Every Pokémon in the pool',st('sp_s32p'),'wide')}
-    ${T('sp_types','#ff9a4a',324,'Type chart','All 18×18 matchups, random',st('sp_types'),'wide')}
+    ${T('sp_tatk','#ff9a4a',324,'Type chart · Attack','All 18×18: how much damage each type deals, random order',st('sp_tatk'),'wide')}
+    ${T('sp_tdef','#ff7a3a',324,'Type chart · Defence','All 18×18: how much damage each type takes, random order',st('sp_tdef'),'wide')}
     ${T('sp_nat','#2fd0a0',25,'Natures','All 25 natures',st('sp_nat'),'wide')}
    </div>`;
 }
@@ -1083,10 +1119,9 @@ $('#pA').innerHTML='<option value="">Any ability</option>'+Object.keys(HOLD).sor
 renderCards();
 (function(){const h=location.hash.slice(1);showTab(TABS.includes(h)?h:'home')})();
 
-$('#pSrc').value=SRCK;$('#pOff').value=OFFN;
+$('#pSrc').value=SRCK;renderEvPick();
 function applySrc(){U=USAGES[SRCK]||{};POOL=poolFor(POOLSEL);const n=$('#srcNote');if(n)n.textContent=(SRC[SRCK].sample||'')+' · '+(SRC[SRCK].note||'');const f=$('#fOff');if(f)f.style.display=SRCK==='official'?'':'none'}
-$('#pSrc').addEventListener('change',e=>{SRCK=e.target.value;applySrc();renderCards()});
-$('#pOff').addEventListener('change',e=>{OFFN=e.target.value;try{localStorage.setItem('vgcOff',OFFN)}catch(x){}buildOfficial();applySrc();renderCards()});
+$('#pSrc').addEventListener('change',e=>{SRCK=e.target.value;if(SRCK==='official'&&OFFSEL){setOffSel(null);buildOfficial();renderEvPick()}applySrc();renderCards()});
 applySrc();
 (function(){const go=()=>{showTab('home');window.scrollTo({top:0,behavior:'smooth'})};document.querySelectorAll('.dev .rotom,.dev h1').forEach(el=>{el.style.cursor='pointer';el.addEventListener('click',go)});const h=document.querySelector('.dev h1');if(h){h.setAttribute('role','link');h.setAttribute('tabindex','0');h.setAttribute('aria-label','Macar Dex, go to home');h.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}})}})();
 /* keep the bottom bar in place on iPhone (keyboard / viewport shifts) */
@@ -1143,9 +1178,11 @@ function t30Card(x,i,mx){
 function renderT30(){
   const L=top30(),mx=L.length?L[0].v:1,o=SRC.official||{};
   $('#t30').innerHTML=`<div class="t30top"><div><h3 class="h" style="margin:0">Top 30 · Official</h3><p class="note" style="margin:4px 0 0">${esc(o.sample||'No official event data')}</p></div>
-   <div class="row"><label class="field"><span class="note">Events used</span><select id="t30Off">${[['1','Last 1'],['2','Last 2'],['3','Last 3'],['5','Last 5'],['all','All this regulation']].map(([v,l])=>`<option value="${v}"${v===OFFN?' selected':''}>${l}</option>`).join('')}</select></label><button class="btn primary" id="t30Quiz">Quiz Top 30</button></div></div>
-   <p class="note">Usage = % of teams that bring the Pokémon, base form and Megas together (Regionals, Internationals and Worlds). Sets, items, spreads and teammates come from the Smogon ladder (Reg M-C, 1760+): there is no set data for official events.</p>
+   <div class="row"><button class="btn primary" id="t30Quiz">Quiz Top 30</button></div></div>
+   <div class="evp" data-evp="t30"></div>
+   <p class="note">Usage = % of teams that bring the Pokémon, base form and Megas together (the official events you pick). Sets, items, spreads and teammates come from the Smogon ladder (Reg M-C, 1760+): there is no set data for official events.</p>
    <div class="t30grid">${L.map((x,i)=>t30Card(x,i,mx)).join('')}</div>`;
+  renderEvPick();
 }
 $('#t30Btn').addEventListener('click',()=>{
   T30ON=!T30ON;$('#tab-dex').classList.toggle('t30on',T30ON);$('#t30Btn').setAttribute('aria-pressed',T30ON);
@@ -1158,11 +1195,6 @@ $('#t30').addEventListener('click',e=>{
     card.querySelectorAll('[data-tf]').forEach(b=>b.setAttribute('aria-pressed',b===t));
     card.querySelectorAll('.t30p').forEach(p=>p.classList.toggle('hide',p.dataset.pf!==t.dataset.tf));return}
   const o=e.target.closest('[data-open]');if(o)openCard(o.dataset.open);
-});
-$('#t30').addEventListener('change',e=>{
-  if(e.target.id!=='t30Off')return;
-  OFFN=e.target.value;try{localStorage.setItem('vgcOff',OFFN)}catch(x){}
-  buildOfficial();applySrc();$('#pOff').value=OFFN;renderT30();
 });
 
 /* ---- Top 30 quiz ---- */
@@ -1197,7 +1229,7 @@ function top30Qs(){
      const bad=pickN(tops,3,b=>!own.has(b.k));if(bad.length<3)return null;
      return{sec:'pokemon',prompt:`Which Pokémon is a usual teammate of <b>${esc(f.n)}</b>?`,ik:f.k,opts:[monOpt(c,1),...bad.map(b=>monOpt(b,0))],explain:`${esc(f.n)}: ${t.slice(0,6).map(([k,v])=>esc((BYK[k]||{n:k}).n)+' '+Math.round(v)+'%').join(' · ')}.`}},
    spe:f=>{const s=(C[f.k]||{}).s;if(!s||!s.length||s[0][2]<15)return speedNumQ(f,'sp_s32p');const c=s[0],v=stat50(f,5,c[1][5],natMult(c[0]));
-     return{type:'num',sec:'speed',prompt:`Speed of <b>${esc(f.n)}</b> with its most common spread (${esc(c[0])} · ${spStr(c[1])})?`,ik:f.k,answer:v,hint:'Level 50. ⌊(base + 20 + SP) × nature⌋. Type the number.',explain:`Base ${f.s} → ${v}.`}}
+     return{type:'num',sec:'speed',prompt:`Speed of <b>${esc(f.n)}</b> with its most common spread (${esc(c[0])} · ${spStr(c[1])})?`,ik:f.k,answer:v,hint:'Level 50. Type the number.',explain:`Base ${f.s} → ${v}.`}}
   };
   const out=[],seen=new Set();
   tops.forEach(b=>{let n=0;for(const t of shuffle(Object.keys(gens))){if(n>=2)break;const f=pickForm(b);if(!f)break;const q=gens[t](f);if(q&&!seen.has(qkey(q))){seen.add(qkey(q));out.push(q);n++}}});
