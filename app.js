@@ -134,23 +134,32 @@ function evPickHTML(where){
     return `<div class="evreg"><label class="evrh"><input type="checkbox" data-evreg="${r}"${on===L.length?' checked':''}${on&&on<L.length?' data-mixed="1"':''}> <b>${regLbl(r)}</b> <small>${L.length} event${L.length>1?'s':''}</small></label>
      ${L.map(e=>`<div class="evr"><label><input type="checkbox" data-ev="${e.id}"${ids.has(e.id)?' checked':''}> <span>${esc(evShort(e))}</span><small>${e.type} · ${e.date} · ${e.teams.toLocaleString('en')} teams</small></label><button type="button" class="evonly" data-evonly="${e.id}">Only</button></div>`).join('')}</div>`}).join('');
   return `<button type="button" class="btn evbtn" data-evtog="${where}" aria-expanded="false"><span class="note">Events</span> <b>${esc(sum)}</b> <small>${tot.toLocaleString('en')} teams</small> ▾</button>
-   <div class="evpanel hide" data-evpanel="${where}"><div class="evq"><button type="button" class="btn" data-evq="latest"${OFFSEL?'':' aria-pressed="true"'}>Latest event</button>${REGS.map(r=>`<button type="button" class="btn" data-evq="reg:${r}">All ${regLbl(r).slice(4)}</button>`).join('')}<button type="button" class="btn" data-evq="all">All</button></div>${rows}
-   <div class="evf"><span class="note">${use.length} event${use.length>1?'s':''} · ${tot.toLocaleString('en')} teams</span><button type="button" class="btn primary" data-evdone>Done</button></div></div>`;
+   <div class="evpanel hide" data-evpanel="${where}"${OFFSEL?'':' data-latest="1"'}><div class="evq"><button type="button" class="btn" data-evq="latest"${OFFSEL?'':' aria-pressed="true"'}>Latest event</button>${REGS.map(r=>`<button type="button" class="btn" data-evq="reg:${r}">All ${regLbl(r).slice(4)}</button>`).join('')}<button type="button" class="btn" data-evq="all">All</button></div>${rows}
+   <div class="evf"><span class="note">${use.length} event${use.length>1?'s':''} · ${tot.toLocaleString('en')} teams</span><button type="button" class="btn primary" data-evdone>Show results</button></div></div>`;
 }
-function renderEvPick(){document.querySelectorAll('[data-evp]').forEach(el=>{const open=!!el.querySelector('.evpanel:not(.hide)');el.innerHTML=evPickHTML(el.dataset.evp);if(open){el.querySelector('.evpanel').classList.remove('hide');el.querySelector('.evbtn').setAttribute('aria-expanded','true')}el.querySelectorAll('[data-mixed]').forEach(c=>c.indeterminate=true)})}
+function renderEvPick(){document.querySelectorAll('[data-evp]').forEach(el=>{el.innerHTML=evPickHTML(el.dataset.evp);el.querySelectorAll('[data-mixed]').forEach(c=>c.indeterminate=true)})}
 function evChanged(){buildOfficial();if(typeof applySrc==='function')applySrc();renderEvPick();if(typeof renderCards==='function')renderCards();if(typeof T30ON!=='undefined'&&T30ON)renderT30()}
+/* Ticking events only changes the boxes; "Show results" applies them (no jumping while you pick). */
+const evIds=p=>[...p.querySelectorAll('[data-ev]:checked')].map(c=>c.dataset.ev);
+function evSync(p){
+  p.querySelectorAll('[data-evreg]').forEach(r=>{const cs=[...p.querySelectorAll('.evreg [data-ev]')].filter(c=>EVS.find(x=>x.id===c.dataset.ev).reg===r.dataset.evreg),n=cs.filter(c=>c.checked).length;r.checked=n===cs.length;r.indeterminate=n>0&&n<cs.length});
+  const ids=evIds(p),tot=EVS.filter(x=>ids.includes(x.id)).reduce((s,x)=>s+x.teams,0),go=p.querySelector('[data-evdone]');
+  p.querySelector('.evf .note').textContent=ids.length?ids.length+' event'+(ids.length>1?'s':'')+' · '+tot.toLocaleString('en')+' teams':'Pick at least one event';
+  go.disabled=!ids.length;
+  p.querySelectorAll('[data-evq]').forEach(b=>b.removeAttribute('aria-pressed'));if(p.dataset.latest)p.querySelector('[data-evq="latest"]').setAttribute('aria-pressed','true');
+}
+function evSet(p,ids){p.querySelectorAll('[data-ev]').forEach(c=>c.checked=ids.includes(c.dataset.ev));evSync(p)}
 document.addEventListener('click',e=>{
-  const t=e.target.closest('[data-evtog]');if(t){const p=t.parentElement.querySelector('.evpanel');p.classList.toggle('hide');t.setAttribute('aria-expanded',!p.classList.contains('hide'));return}
-  if(e.target.closest('[data-evdone]')){const p=e.target.closest('.evpanel');p.classList.add('hide');p.parentElement.querySelector('.evbtn').setAttribute('aria-expanded','false');return}
-  const o=e.target.closest('[data-evonly]');if(o){setOffSel([o.dataset.evonly]);evChanged();return}
-  const q=e.target.closest('[data-evq]');if(q){const v=q.dataset.evq;setOffSel(v==='latest'?null:v==='all'?EVS.map(x=>x.id):EVS.filter(x=>x.reg===v.slice(4)).map(x=>x.id));evChanged()}
+  const t=e.target.closest('[data-evtog]');if(t){const p=t.parentElement.querySelector('.evpanel');if(!p.classList.contains('hide')){renderEvPick();return}p.classList.remove('hide');t.setAttribute('aria-expanded','true');return}
+  const p=e.target.closest('.evpanel');if(!p)return;
+  if(e.target.closest('[data-evdone]')){const ids=evIds(p);if(!ids.length)return;setOffSel(p.dataset.latest?null:EVS.filter(x=>ids.includes(x.id)).map(x=>x.id));const w=p.dataset.evpanel;p.classList.add('hide');evChanged();const el=document.querySelector('[data-evp="'+w+'"]');if(el){const y=el.getBoundingClientRect().top+scrollY-12;if(y<scrollY)scrollTo({top:y,behavior:'smooth'})}return}
+  const o=e.target.closest('[data-evonly]');if(o){delete p.dataset.latest;evSet(p,[o.dataset.evonly]);return}
+  const q=e.target.closest('[data-evq]');if(q){const v=q.dataset.evq;if(v==='latest')p.dataset.latest='1';else delete p.dataset.latest;evSet(p,v==='latest'?[EVS[0].id]:v==='all'?EVS.map(x=>x.id):EVS.filter(x=>x.reg===v.slice(4)).map(x=>x.id))}
 });
 document.addEventListener('change',e=>{
-  const c=e.target.closest('[data-ev],[data-evreg]');if(!c)return;
-  const cur=new Set(offUse().map(x=>x.id));
-  if(c.dataset.ev){c.checked?cur.add(c.dataset.ev):cur.delete(c.dataset.ev)}else{EVS.filter(x=>x.reg===c.dataset.evreg).forEach(x=>c.checked?cur.add(x.id):cur.delete(x.id))}
-  if(!cur.size){renderEvPick();return}
-  setOffSel(EVS.filter(x=>cur.has(x.id)).map(x=>x.id));evChanged();
+  const c=e.target.closest('[data-ev],[data-evreg]');if(!c)return;const p=c.closest('.evpanel');if(!p)return;delete p.dataset.latest;
+  if(c.dataset.evreg)p.querySelectorAll('[data-ev]').forEach(x=>{if(EVS.find(v=>v.id===x.dataset.ev).reg===c.dataset.evreg)x.checked=c.checked});
+  evSync(p);
 });
 buildOfficial();
 let U=USAGES[SRCK]||{};
