@@ -71,3 +71,4 @@ Actualizar CURREG, conservar eventos de la regulación actual y los de la anteri
 - 2026-11-18 (manual): app instalable publicada en GitHub (Pages). La tarea semanal sube también los datos al repositorio.
 - 2026-11-18 (manual): Top 30 (Regionals) añadido. Arturo pasa a editar en Claude Code; este repositorio es la fuente de verdad.
 - 2026-11-18 (manual): la tarea semanal pasa a Claude Code y deja de actualizar el artefacto.
+- 2026-11-24 (automática): online actualizado (142 eventos Limitless, 7.497 equipos, hasta 2026-11-24; 256 Pokémon). Oficial: añadido 2027 Latin America International (LAI, 2026-11-20, regmc, 652 equipos, 129 Pokémon; tipo International, no entra en el Top 30 de Regionales). Showdown sigue oct 2026 (nov aún no publicado): sets.js e items.js sin cambios. Sin descartes.
