@@ -21,7 +21,7 @@ Hasta el 18 nov 2026 el artefacto era la fuente de verdad. Desde que Arturo edit
 
 ## Uso en la app
 - El Daily y los quizzes usan el uso de **showdown** para el pool: +0,3 %, +0,1 % o todos.
-- El Top 30 usa los Regionales oficiales (EVENTS).
+- El Top 30 usa los eventos oficiales de la regulación actual (EVENTS de tipo Regional, International y Worlds; no Special).
 - En el Dex, ordenar por uso oculta los Pokémon por debajo de 0,1 % (salvo filtro de tier "n").
 - La calculadora de daño y el constructor de equipos precargan habilidad y movimientos de `SETS`, y naturaleza, spread y objeto de `CSETS`.
 

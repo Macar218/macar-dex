@@ -111,15 +111,15 @@ const spdTW=p=>spdBase(p)*2;
 const SRC=window.SRC||{},USAGES=window.USAGES||{};
 let SRCK='showdown';
 const EVENTS=window.EVENTS||[],CURREG=window.CURREG||'';
-let OFFN='3';try{const s=localStorage.getItem('vgcOff');if(s)OFFN=s}catch(e){}
+const OFFTYPES=['Regional','International','Worlds'];let OFFN='3';try{const s=localStorage.getItem('vgcOff');if(s)OFFN=s}catch(e){}
 function buildOfficial(){
-  const evs=EVENTS.filter(e=>e.reg===CURREG&&e.type==='Regional').sort((x,y)=>y.date.localeCompare(x.date));
+  const evs=EVENTS.filter(e=>e.reg===CURREG&&OFFTYPES.includes(e.type)).sort((x,y)=>y.date.localeCompare(x.date));
   const use=OFFN==='all'?evs:evs.slice(0,+OFFN||3);
   const tot=use.reduce((s,e)=>s+e.teams,0),u={};
   use.forEach(e=>{for(const k in e.u)u[k]=(u[k]||0)+e.u[k]*e.teams});
   for(const k in u)u[k]=Math.round(u[k]/tot*10)/10;
   USAGES.official=u;
-  const o=SRC.official;if(o&&use.length){o.n=Object.keys(u).length;o.date=use[use.length-1].date+' to '+use[0].date;o.sample=use.length+' Regionals ('+use.map(e=>e.name.replace(/^\d{4} /,'').replace(' Regional','')).join(', ')+'), '+tot.toLocaleString('en')+' teams'}
+  const o=SRC.official;if(o&&use.length){o.n=Object.keys(u).length;o.date=use[use.length-1].date+' to '+use[0].date;o.sample=use.length+' official events ('+use.map(e=>e.name.replace(/^\d{4} /,'').replace(' Regional','')).join(', ')+'), '+tot.toLocaleString('en')+' teams'}
 }
 buildOfficial();
 let U=USAGES[SRCK]||{};
@@ -816,7 +816,7 @@ const SPECNAME={sp_s0:'Speed · 0 SP',sp_s32:'Speed · 32 SP',sp_s32p:'Speed · 
 const SPECM=Object.keys(SPECNAME),FIXEDM=['review','daily','focus','top30',...SPECM];
 const SECM=['inf','r20','r50','r100','time'],TRACKM=['daily','r20','r50','r100','top30',...SPECM],POOLM=['inf','r20','r50','r100','time','sp_s0','sp_s32','sp_s32p'];
 const RANDN={r20:20,r50:50,r100:100};
-const MODENAME={inf:'Endless',r20:'Random 20',r50:'Random 50',r100:'Random 100',time:'60 seconds',review:'Review mistakes',daily:'Daily challenge',focus:'Focus quiz',top30:'Top 30 · Regionals',...SPECNAME};
+const MODENAME={inf:'Endless',r20:'Random 20',r50:'Random 50',r100:'Random 100',time:'60 seconds',review:'Review mistakes',daily:'Daily challenge',focus:'Focus quiz',top30:'Top 30 · Official',...SPECNAME};
 const histKey=m=>SPF[m]?m+'|'+POOLSEL:m;
 const hist=m=>QZ.hist[histKey(m)]||[];
 function spark(a,w,hh,big){
@@ -872,7 +872,7 @@ function renderQMenu(){
    </div>
    <div class="qgrp">Full quizzes · track your progress</div>
    <div class="qtiles">
-    ${T('top30','#ffd23f',30,'Top 30 · Regionals','Ability, moves, item, spread, teammates and Speed of the 30 most used',st('top30'),'wide')}
+    ${T('top30','#ffd23f',30,'Top 30 · Official','Ability, moves, item, spread, teammates and Speed of the 30 most used',st('top30'),'wide')}
     ${T('sp_s0','#ff4fa8',np,'Speed · 0 SP','Every Pokémon in the pool',st('sp_s0'),'wide')}
     ${T('sp_s32','#ff4fa8',np,'Speed · 32 SP','Every Pokémon in the pool',st('sp_s32'),'wide')}
     ${T('sp_s32p','#ff4fa8',np,'Speed · 32 SP +','Every Pokémon in the pool',st('sp_s32p'),'wide')}
@@ -1107,7 +1107,7 @@ applySrc();
   window.addEventListener('pageshow',q);q();
 })();
 
-/* ---------- TOP 30 (Regionals) ---------- */
+/* ---------- TOP 30 (official events: Regionals, Internationals, Worlds) ---------- */
 const T30N=30;
 let T30ON=false;
 const O_U=()=>USAGES.official||{};
@@ -1142,9 +1142,9 @@ function t30Card(x,i,mx){
 }
 function renderT30(){
   const L=top30(),mx=L.length?L[0].v:1,o=SRC.official||{};
-  $('#t30').innerHTML=`<div class="t30top"><div><h3 class="h" style="margin:0">Top 30 · Regionals</h3><p class="note" style="margin:4px 0 0">${esc(o.sample||'No Regionals data')}</p></div>
-   <div class="row"><label class="field"><span class="note">Regionals used</span><select id="t30Off">${[['1','Last 1'],['2','Last 2'],['3','Last 3'],['5','Last 5'],['all','All this regulation']].map(([v,l])=>`<option value="${v}"${v===OFFN?' selected':''}>${l}</option>`).join('')}</select></label><button class="btn primary" id="t30Quiz">Quiz Top 30</button></div></div>
-   <p class="note">Usage = % of teams that bring the Pokémon, base form and Megas together (Regionals). Sets, items, spreads and teammates come from the Smogon ladder (Reg M-C, 1760+): there is no set data for Regionals.</p>
+  $('#t30').innerHTML=`<div class="t30top"><div><h3 class="h" style="margin:0">Top 30 · Official</h3><p class="note" style="margin:4px 0 0">${esc(o.sample||'No official event data')}</p></div>
+   <div class="row"><label class="field"><span class="note">Events used</span><select id="t30Off">${[['1','Last 1'],['2','Last 2'],['3','Last 3'],['5','Last 5'],['all','All this regulation']].map(([v,l])=>`<option value="${v}"${v===OFFN?' selected':''}>${l}</option>`).join('')}</select></label><button class="btn primary" id="t30Quiz">Quiz Top 30</button></div></div>
+   <p class="note">Usage = % of teams that bring the Pokémon, base form and Megas together (Regionals, Internationals and Worlds). Sets, items, spreads and teammates come from the Smogon ladder (Reg M-C, 1760+): there is no set data for official events.</p>
    <div class="t30grid">${L.map((x,i)=>t30Card(x,i,mx)).join('')}</div>`;
 }
 $('#t30Btn').addEventListener('click',()=>{

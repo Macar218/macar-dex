@@ -1185,12 +1185,12 @@ var t=setTimeout(open,2500);i.addEventListener('click',function(){clearTimeout(t
 <section id="tab-dex" class="hide">
   <div class="shead"><h2>Dex</h2><p id="dexNote">Pill = usage in the selected source: S ≥20% · A ≥10% · B ≥5% · C ≥2% · D ≥0.1%. ★ = favourite.</p><p class="note" id="srcNote"></p></div>
   <div class="toolbar">
-    <div class="trow t30row"><button type="button" class="btn t30btn" id="t30Btn" aria-pressed="false">🏆 Top 30 · Regionals</button></div>
+    <div class="trow t30row"><button type="button" class="btn t30btn" id="t30Btn" aria-pressed="false">🏆 Top 30 · Official</button></div>
     <div class="trow"><div class="field"><label for="pQ">Search</label><input type="search" id="pQ" placeholder="Pokémon or ability"></div>
       <button type="button" class="btn fbtn" id="fToggle" aria-expanded="false">Filters<b id="fBadge" class="hide">0</b></button></div>
     <div class="trow two"><div class="field"><label for="pS">Sort by</label>
       <select id="pS"><option value="spe">Speed (fastest first)</option><option value="use" selected>Usage</option><option value="n">Name</option><option value="bst">Base stat total</option><option value="atk">Attack</option><option value="spa">Sp. Attack</option><option value="bulk">Bulk (HP·Def·SpD)</option></select></div>
-      <div class="field"><label for="pSrc">Source</label><select id="pSrc"><option value="showdown">Showdown</option><option value="official">Regionals</option><option value="online">Online (30 d)</option></select></div></div>
+      <div class="field"><label for="pSrc">Source</label><select id="pSrc"><option value="showdown">Showdown</option><option value="official">Official</option><option value="online">Online (30 d)</option></select></div></div>
     <div class="trow view">
       <label class="field spf"><span>Stats</span><select id="pSP" class="spsel-s"><option value="0">No SP</option><option value="1">32 SP</option></select></label>
       <label class="chk"><input type="checkbox" id="pSt" checked> Show stats</label>
@@ -1202,7 +1202,7 @@ var t=setTimeout(open,2500);i.addEventListener('click',function(){clearTimeout(t
       <div class="field"><label for="pV">Min speed</label><input type="number" id="pV" min="0" max="500" placeholder="e.g. 150" inputmode="numeric"></div>
       <div class="field"><label for="pU">Usage tier</label><select id="pU"><option value="">All Pokémon</option><option value="a">S–A tier (10%+)</option><option value="c">S–C tier (2%+)</option><option value="m">Meta (0.3%+)</option><option value="d">D tier (0.1–2%)</option><option value="n">Unused (under 0.1%)</option></select></div>
       <div class="field"><label for="pM">Mega</label><select id="pM"><option value="">Any</option><option value="y">Has a Mega</option><option value="n">No Mega</option><option value="o">Only Mega forms</option></select></div>
-      <div class="field" id="fOff"><label for="pOff">Regionals used</label><select id="pOff"><option value="1">Last 1</option><option value="2">Last 2</option><option value="3">Last 3</option><option value="5">Last 5</option><option value="all">All this regulation</option></select></div>
+      <div class="field" id="fOff"><label for="pOff">Events used</label><select id="pOff"><option value="1">Last 1</option><option value="2">Last 2</option><option value="3">Last 3</option><option value="5">Last 5</option><option value="all">All this regulation</option></select></div>
     </div>
     <div class="trow cnt"><div class="note" id="pCount" style="margin:0"></div><button class="btn qlink" data-quiz="pokemon">Quiz: Pokémon</button></div>
   </div>
