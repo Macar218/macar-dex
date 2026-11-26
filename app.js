@@ -878,8 +878,21 @@ function spark(a,w,hh,big){
 }
 const fmtD=t=>{const d=new Date(t);return d.getDate()+'/'+(d.getMonth()+1)};
 const hyd=q=>{if(q&&q.rb&&q.rb[0]==='nat'){const n=NATS.find(x=>x[0]===q.rb[1]);return n?natureQ(n):null}return q};
-function startRun(mode,k){
+/* Long quizzes left half-way are saved after every answer and can be continued later (localStorage vgcRuns). */
+const SAVEM=()=>[...SPECM,'top30','daily','r20','r50','r100'];
+let RUNS=LS.get('vgcRuns',{});for(const k in RUNS){const s=RUNS[k];if(!s||!s.m||(s.m==='daily'&&s.day!==todayStr()))delete RUNS[k]}
+const qSer=q=>q.type==='custom'?(q.rb?{type:'custom',rb:q.rb,key:q.key,sec:q.sec,prompt:q.prompt}:null):Object.assign(JSON.parse(JSON.stringify(q)),{order:null});
+function saveRuns(){try{localStorage.setItem('vgcRuns',JSON.stringify(RUNS))}catch(e){const ks=Object.keys(RUNS).sort((a,b)=>RUNS[a].t-RUNS[b].t);while(ks.length>1){delete RUNS[ks.shift()];try{localStorage.setItem('vgcRuns',JSON.stringify(RUNS));return}catch(x){}}}}
+function saveRun(){
+  const m=QZ.mode,r=QZ.run,k=QZ.runKey;if(!r||!k||!SAVEM().includes(m))return;
+  const last=r.queue?r.qi>=r.queue.length:r.n>=r.total;
+  if(last||!r.n)delete RUNS[k];else RUNS[k]={m,t:Date.now(),day:m==='daily'?todayStr():'',n:r.n,ok:r.ok,total:r.total,queue:r.queue?r.queue.slice(r.qi).map(qSer).filter(Boolean):null,wrong:r.wrong.map(qSer).filter(Boolean)};
+  saveRuns();
+}
+function startRun(mode,k,resume){
   clearInterval(QZ.timer);clearTimeout(QZ.adv);
+  QZ.runKey=SAVEM().includes(mode)?(resume||histKey(mode)):null;const sv=resume&&RUNS[resume];
+  if(!resume&&QZ.runKey&&RUNS[QZ.runKey]){delete RUNS[QZ.runKey];saveRuns()}
   QZ.mode=mode;QZ.streak=0;QZ.done=false;QZ.focus=mode==='focus'?k:null;QZ.view='play';QZ.kb=false;
   const r={n:0,ok:0,qi:0,wrong:[],total:Infinity,queue:null,left:60,seen:new Set(),rec:0};
   if(RANDN[mode])r.total=RANDN[mode];
@@ -890,6 +903,7 @@ function startRun(mode,k){
   if(mode==='sp_tatk'||mode==='sp_tdef'){const atk=mode==='sp_tatk';r.queue=shuffle(TYPES.flatMap(a=>TYPES.map(d=>typeQ(a,d,atk))));r.total=r.queue.length}
   if(mode==='sp_nat'){r.queue=shuffle(NATS).map(natureQ);r.total=r.queue.length}
   if(mode==='top30'){r.queue=top30Qs();r.total=r.queue.length}
+  if(sv){r.n=sv.n;r.ok=sv.ok;r.total=sv.total;r.queue=sv.queue?sv.queue.map(hyd).filter(Boolean):null;r.qi=0;r.wrong=(sv.wrong||[]).map(hyd).filter(Boolean)}
   QZ.run=r;renderQuizUI();
   if(r.total===0){renderResult();return}
   if(mode==='time')QZ.timer=setInterval(()=>{r.left--;const e=$('#qTimer');if(e)e.textContent=r.left+'s';if(r.left<=0){clearInterval(QZ.timer);clearTimeout(QZ.adv);renderResult()}},1000);
@@ -908,8 +922,10 @@ function renderQMenu(){
   const nm=QZ.missed.length,np=POOL.length;
   const st=m=>{const a=hist(m);if(!a.length)return '<span class="st">No attempts yet</span>';const l=a[a.length-1].pc,b=Math.max(...a.map(x=>x.pc)),pv=a.length>1?a[a.length-2].pc:null,dl=pv===null?null:l-pv;
     return `<span class="qsc"><small>Last</small><b>${l}%</b>${dl===null?'<em>first try</em>':`<em class="${dl>0?'up':dl<0?'dn':''}">${dl>0?'▲ +'+dl:dl<0?'▼ '+dl:'= same'}</em>`}<i>best ${b}% · ${a.length} ${a.length>1?'tries':'try'}</i>${a.length>1?spark(a.slice(-10),90,26):''}</span>`};
-  const T=(m,c,big,title,sub,extra='',cls='')=>`<button class="qt ${cls}" data-m="${m}" style="--c:${c}"><span class="big">${big}</span><b>${title}</b><small>${sub}</small>${extra}</button>`;
-  $('#qMenuBody').innerHTML=`
+  const T=(m,c,big,title,sub,extra='',cls='')=>{const sk=SAVEM().includes(m)?histKey(m):'',sv=sk&&RUNS[sk];return `<button class="qt ${cls}" data-m="${m}"${sv?` data-resume="${sk}"`:''} style="--c:${c}"><span class="big">${big}</span><b>${title}</b><small>${sub}</small>${sv?`<span class="qrun">▶ Continue · ${sv.n}/${sv.total}</span>`:''}${extra}</button>`};
+  const ip=Object.entries(RUNS).sort((a,b)=>b[1].t-a[1].t);
+  const inprog=ip.length?`<div class="qgrp">In progress · continue where you left off</div><div class="qruns">${ip.map(([k,s])=>`<div class="qrunrow"><div><b>${esc(MODENAME[s.m]||s.m)}${k.includes('|')?` <small>(pool ${esc(k.split('|')[1])})</small>`:''}</b><span>${s.n} / ${s.total} answered · ${s.ok} correct · ${fmtD(s.t)}</span><i style="width:${Math.round(s.n/s.total*100)}%"></i></div><button class="btn primary" data-resume="${esc(k)}">Continue</button><button class="btn" data-restart="${esc(k)}">Start over</button></div>`).join('')}</div>`:'';
+  $('#qMenuBody').innerHTML=inprog+`
    <div class="qgrp">Daily</div>
    <div class="qtiles">${T('daily','#ffb02e','20',`Daily challenge ${flame(live,dAvg())}`,`${doneToday?`Done today: ${d.scores[t]}/20`:'6 speed · 8 Pokémon and types · 2 abilities · 2 moves · 1 item · 1 nature'}`,st('daily'),'wide')}</div>
    <div class="qgrp">Practice</div>
@@ -1015,7 +1031,7 @@ function finishQ(ok,msg){
       else{const c=JSON.parse(JSON.stringify(q));c.order=null;c.retry=0;c.rt=0;QZ.missed.push(c)}
     }
   }
-  saveQ();qStats();
+  saveQ();qStats();saveRun();
   const last=r.queue?r.qi>=r.queue.length:r.n>=r.total;
   if(QZ.mode==='time'){
     fbOut(q,ok,ok?'':msg,'time');
@@ -1069,7 +1085,10 @@ $('#qArea').addEventListener('click',e=>{
   const b=e.target.closest('[data-m]');if(b)startRun(b.dataset.m);
 });
 $('#qSec').addEventListener('click',e=>{const b=e.target.closest('.gchip');if(!b)return;QZ.sec=b.dataset.s;startRun(FIXEDM.includes(QZ.mode)?'inf':QZ.mode)});
-$('#qMenu').addEventListener('click',e=>{const b=e.target.closest('[data-m]');if(b)startRun(b.dataset.m)});
+$('#qMenu').addEventListener('click',e=>{
+  const rs=e.target.closest('[data-restart]');if(rs){const s=RUNS[rs.dataset.restart];if(!s)return;delete RUNS[rs.dataset.restart];saveRuns();startRun(s.m);return}
+  const re=e.target.closest('[data-resume]');if(re&&RUNS[re.dataset.resume]){startRun(RUNS[re.dataset.resume].m,null,re.dataset.resume);return}
+  const b=e.target.closest('[data-m]');if(b)startRun(b.dataset.m)});
 $('#qBack').addEventListener('click',showQMenu);
 let resetArm=0;
 $('#qReset').addEventListener('click',e=>{
