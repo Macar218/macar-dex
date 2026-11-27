@@ -954,6 +954,7 @@ function renderQuizUI(){
   $('#qPoolSlot').appendChild($('#qPoolRow'));$('#qPool').value=POOLSEL;
   $('#qPoolRow').classList.toggle('hide',!POOLM.includes(m));
   $('#qTitle').textContent=MODENAME[m]||'';
+  $('#qRestart').classList.toggle('hide',m==='daily');$('#qRestart').textContent='↻ Restart';
   $('#qSec').classList.toggle('hide',!SECM.includes(m));
   $('#qSec').innerHTML=SECS.map(([k,l])=>`<button class="gchip" data-s="${k}" aria-pressed="${k===QZ.sec}">${l}</button>`).join('');
   $('.stats',$('#qPlay')).classList.toggle('hide',SPECM.includes(m)||m==='daily'||m==='top30');
@@ -1090,6 +1091,15 @@ $('#qMenu').addEventListener('click',e=>{
   const re=e.target.closest('[data-resume]');if(re&&RUNS[re.dataset.resume]){startRun(RUNS[re.dataset.resume].m,null,re.dataset.resume);return}
   const b=e.target.closest('[data-m]');if(b)startRun(b.dataset.m)});
 $('#qBack').addEventListener('click',showQMenu);
+/* Restart the quiz you are playing from question 1 (two taps; drops its saved progress). Not for the Daily: one try per day. */
+let restartArm=0;
+$('#qRestart').addEventListener('click',e=>{
+  const b=e.currentTarget;
+  if(!restartArm){restartArm=1;b.textContent='Sure? Tap again';setTimeout(()=>{restartArm=0;b.textContent='↻ Restart'},3000);return}
+  restartArm=0;b.textContent='↻ Restart';
+  if(QZ.runKey&&RUNS[QZ.runKey]){delete RUNS[QZ.runKey];saveRuns()}
+  startRun(QZ.mode,QZ.focus);
+});
 let resetArm=0;
 $('#qReset').addEventListener('click',e=>{
   if(!resetArm){resetArm=1;e.target.textContent='Sure? Click again';setTimeout(()=>{resetArm=0;e.target.textContent='Reset this section'},3000);return}
